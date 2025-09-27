@@ -134,3 +134,13 @@ document.getElementById("highlightColor").addEventListener("input", (e) => {
   const color = e.target.value;
   editor.execCommand("hiliteColor", color);
 });
+// Unordered List
+document.getElementById("ulBtn").addEventListener("mousedown", (e) => {
+  e.preventDefault();
+  editor.execCommand("insertUnorderedList");
+});
+// Ordered List
+document.getElementById("olBtn").addEventListener("mousedown", (e) => {
+  e.preventDefault();
+  editor.execCommand("insertOrderedList");
+});
