@@ -144,3 +144,19 @@ document.getElementById("olBtn").addEventListener("mousedown", (e) => {
   e.preventDefault();
   editor.execCommand("insertOrderedList");
 });
+document.getElementById("indentBtn").addEventListener("mousedown", (e) => {
+  e.preventDefault();
+  editor.execCommand("indent");
+});
+
+// Decrease Indent
+document.getElementById("outdentBtn").addEventListener("mousedown", (e) => {
+  e.preventDefault();
+  editor.execCommand("outdent");
+});
+
+
+
+
+
+
