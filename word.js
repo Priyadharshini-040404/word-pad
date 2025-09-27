@@ -170,4 +170,10 @@ document.querySelectorAll(".tabBtn").forEach((btn) => {
     document.getElementById(tabId).style.display = "block";
   });
 });
-
+// Insert Link
+document.getElementById("linkBtn").addEventListener("click", () => {
+  const url = prompt("Enter the URL:");
+  if (url) {
+    editor.execCommand("createLink", url);
+  }
+});
