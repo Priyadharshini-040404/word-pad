@@ -117,10 +117,24 @@ document.getElementById("fontSizeSelect").addEventListener("change", (e) => {
   editor.execCommand("fontSize", e.target.value);
 });
 
-// Text Alignment dropdown
 document.getElementById("alignSelect").addEventListener("change", (e) => {
-  const value = e.target.value; // justifyLeft, justifyCenter, etc.
-  editor.execCommand(value);
+  const value = e.target.value;
+  let command = "";
+  switch (value) {
+    case "left":
+      command = "justifyLeft";
+      break;
+    case "center":
+      command = "justifyCenter";
+      break;
+    case "right":
+      command = "justifyRight";
+      break;
+    case "justify":
+      command = "justifyFull";
+      break;
+  }
+  editor.execCommand(command);
 });
 
 // Text Color
@@ -201,4 +215,19 @@ imageInput.addEventListener("change", () => {
     reader.readAsDataURL(file);
   }
 });
-
+document.getElementById("tableBtn").addEventListener("click", () => {
+  const rows = parseInt(prompt("Number of rows?", 2));
+  const cols = parseInt(prompt("Number of columns?", 2));
+  if (rows > 0 && cols > 0) {
+    let table = `<table border="1" style="border-collapse:collapse; width:80%; max-width:600px;">`;
+    for (let r = 0; r < rows; r++) {
+      table += "<tr>";
+      for (let c = 0; c < cols; c++) {
+        table += `<td style="padding:10px;">&nbsp;</td>`;
+      }
+      table += "</tr>";
+    }
+    table += "</table><br>";
+    editor.execCommand("insertHTML", table);
+  }
+});

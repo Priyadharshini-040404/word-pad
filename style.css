@@ -59,6 +59,18 @@ body {
 
 .tabBtn.active {
   background: #fff;
-  border-bottom: 2px solid #0078d7; /* highlight active tab */
+  border-bottom: 2px solid #0078d7; 
   font-weight: bold;
+}
+#editor table {
+  width: 100%;
+  table-layout: fixed;  /* Columns share width evenly */
+  border-collapse: collapse;
+}
+
+#editor td {
+  padding: 10px;
+  border: 1px solid #ccc;
+  min-width: 50px;
+  word-wrap: break-word;
 }
