@@ -116,3 +116,9 @@ document.getElementById("fontSelect").addEventListener("change", (e) => {
 document.getElementById("fontSizeSelect").addEventListener("change", (e) => {
   editor.execCommand("fontSize", e.target.value);
 });
+
+// Text Alignment dropdown
+document.getElementById("alignSelect").addEventListener("change", (e) => {
+  const value = e.target.value; // justifyLeft, justifyCenter, etc.
+  editor.execCommand(value);
+});
