@@ -231,3 +231,28 @@ document.getElementById("tableBtn").addEventListener("click", () => {
     editor.execCommand("insertHTML", table);
   }
 });
+// Clear formatting (remove inline styles and formatting tags)
+document.getElementById("clearFormattingBtn").addEventListener("click", () => {
+  const html = editor.getHTML();
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = html;
+
+  function cleanNode(node) {
+    if (node.nodeType === 1) { // Element
+      node.removeAttribute("style");
+      node.removeAttribute("class");
+      Array.from(node.childNodes).forEach(cleanNode);
+
+      // Optional: unwrap bold, italic, underline, headings
+      if (["B","I","U","H1","H2","H3","SPAN"].includes(node.tagName)) {
+        const parent = node.parentNode;
+        while (node.firstChild) parent.insertBefore(node.firstChild, node);
+        parent.removeChild(node);
+      }
+    }
+  }
+
+  cleanNode(tempDiv);
+  editor.editor.innerHTML = tempDiv.innerHTML;
+});
+
