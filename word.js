@@ -256,3 +256,10 @@ document.getElementById("clearFormattingBtn").addEventListener("click", () => {
   editor.editor.innerHTML = tempDiv.innerHTML;
 });
 
+// Reset editor content
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (confirm("Are you sure you want to reset the editor?")) {
+    editor.reset();
+  }
+});
+
