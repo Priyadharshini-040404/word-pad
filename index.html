@@ -14,9 +14,36 @@
     <div class="tab" id="homeTab">
       <span class="tab-title">Home</span>
       <div class="group">
-        <button id="boldBtn"><b>B</b></button>
-        <button id="italicBtn"><i>I</i></button>
-        <button id="underlineBtn"><u>U</u></button>
+        <!-- Formatting buttons -->
+        <button id="boldBtn" type="button"><b>B</b></button>
+        <button id="italicBtn" type="button"><i>I</i></button>
+        <button id="underlineBtn" type="button"><u>U</u></button>
+      </div>
+
+      <div class="group">
+        <!-- Headings -->
+        <select id="headingSelect">
+          <option value="p">Normal</option>
+          <option value="h1">Heading 1</option>
+          <option value="h2">Heading 2</option>
+          <option value="h3">Heading 3</option>
+        </select>
+
+        <!-- Font family -->
+        <select id="fontSelect">
+          <option value="Arial">Arial</option>
+          <option value="Tahoma">Tahoma</option>
+          <option value="Courier New">Courier New</option>
+        </select>
+
+        <!-- Font size -->
+        <select id="fontSizeSelect">
+          <option value="3">12px</option>
+          <option value="4">14px</option>
+          <option value="5">18px</option>
+          <option value="6">24px</option>
+          <option value="7">36px</option>
+        </select>
       </div>
     </div>
   </div>
@@ -26,6 +53,6 @@
     Start typing here...
   </div>
 
-  <script src="script.js"></script>
+  <script src="word.js"></script>
 </body>
 </html>

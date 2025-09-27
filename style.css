@@ -17,9 +17,11 @@ body {
 
 .group {
   display: inline-block;
+  margin-right: 15px;
 }
 
-.group button {
+.group button,
+.group select {
   margin: 2px;
   padding: 6px 10px;
   cursor: pointer;
@@ -31,4 +33,5 @@ body {
   border: 1px solid #ccc;
   padding: 10px;
   outline: none;
+  overflow-y: auto;
 }
