@@ -282,4 +282,16 @@ document.getElementById("previewBtn").addEventListener("click", () => {
 document.getElementById("closePreview").addEventListener("click", () => {
   document.getElementById("previewModal").style.display = "none";
 });
-
+// Toggle File dropdown
+document.getElementById("fileTabBtn").addEventListener("click", () => {
+  const dropdown = document.getElementById("fileDropdown");
+  dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+});
+// Hide dropdown if clicked outside
+document.addEventListener("click", (e) => {
+  const fileBtn = document.getElementById("fileTabBtn");
+  const dropdown = document.getElementById("fileDropdown");
+  if (!fileBtn.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.style.display = "none";
+  }
+});

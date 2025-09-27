@@ -8,15 +8,21 @@
 <body>
 
   <h2>Mini WordPad</h2>
-
-  <!-- Home Ribbon -->
-  <!-- Ribbon Tabs -->
 <div id="ribbonTabs">
-  <!-- Tab Buttons -->
+  <!-- File Tab -->
+  <div class="dropdown">
+    <button class="tabBtn" id="fileTabBtn">File ▾</button>
+    <div class="dropdown-content" id="fileDropdown" style="display:none; position:absolute;
+     background:#fff; border:1px solid #ccc; z-index:1000;">
+      <button id="saveDocBtn" type="button">Save as DOC</button>
+      <button id="savePdfBtn" type="button">Save as PDF</button>
+    </div>
+  </div>
+
+  <!-- Home & Insert Tabs -->
   <button class="tabBtn active" data-tab="homeTab">Home</button>
   <button class="tabBtn" data-tab="insertTab">Insert</button>
 </div>
-
 <!-- Ribbon Content -->
 <div id="ribbon">
   <!-- Home Tab -->
