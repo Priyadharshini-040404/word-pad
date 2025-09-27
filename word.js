@@ -1,3 +1,4 @@
+// Editor class
 class Editor {
   constructor(editorElement) {
     this.editor = editorElement;
@@ -11,6 +12,12 @@ class Editor {
   reset() {
     this.editor.innerHTML = "";
   }
+
+  // Make sure editor is focused before execCommand
+  execCommand(command) {
+    this.editor.focus();
+    document.execCommand(command, false, null);
+  }
 }
 
 // Initialize editor
@@ -18,13 +25,13 @@ const editor = new Editor(document.getElementById("editor"));
 
 // Toolbar buttons
 document.getElementById("boldBtn").addEventListener("click", () => {
-  document.execCommand("bold", false, null);
+  editor.execCommand("bold");
 });
 
 document.getElementById("italicBtn").addEventListener("click", () => {
-  document.execCommand("italic", false, null);
+  editor.execCommand("italic");
 });
 
 document.getElementById("underlineBtn").addEventListener("click", () => {
-  document.execCommand("underline", false, null);
+  editor.execCommand("underline");
 });
