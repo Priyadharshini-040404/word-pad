@@ -8,6 +8,14 @@
       font-family: Arial, sans-serif;
       margin: 20px;
     }
+    #toolbar {
+      margin-bottom: 10px;
+    }
+    #toolbar button {
+      margin: 2px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
     #editor {
       width: 100%;
       height: 400px;
@@ -15,38 +23,36 @@
       padding: 10px;
       outline: none;
     }
-    button {
-      margin: 2px;
-      padding: 6px 10px;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
 
   <h2>Mini WordPad</h2>
 
-  <!-- Toolbar will come later -->
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <button id="boldBtn"><b>B</b></button>
+    <button id="italicBtn"><i>I</i></button>
+    <button id="underlineBtn"><u>U</u></button>
+  </div>
 
+  <!-- Editable text area -->
   <div id="editor" contenteditable="true">
     Start typing here...
   </div>
 
   <script>
-    // Simple OOP Editor class
+    // OOP Editor class
     class Editor {
       constructor(editorElement) {
         this.editor = editorElement;
       }
-
       getHTML() {
         return this.editor.innerHTML;
       }
-
       getText() {
         return this.editor.innerText;
       }
-
       reset() {
         this.editor.innerHTML = "";
       }
@@ -55,7 +61,19 @@
     // Initialize editor
     const editor = new Editor(document.getElementById("editor"));
 
-    // For testing in console
+    // Toolbar button functionality
+    document.getElementById("boldBtn").addEventListener("click", () => {
+      document.execCommand("bold", false, null);
+    });
+
+    document.getElementById("italicBtn").addEventListener("click", () => {
+      document.execCommand("italic", false, null);
+    });
+
+    document.getElementById("underlineBtn").addEventListener("click", () => {
+      document.execCommand("underline", false, null);
+    });
+
     console.log(editor.getHTML());
   </script>
 </body>
