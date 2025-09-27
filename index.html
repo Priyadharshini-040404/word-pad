@@ -10,70 +10,82 @@
   <h2>Mini WordPad</h2>
 
   <!-- Home Ribbon -->
-  <div id="ribbon">
-    <div class="tab" id="homeTab">
-      <span class="tab-title">Home</span>
-      <div class="group">
-        <!-- Formatting buttons -->
-        <button id="boldBtn" type="button"><b>B</b></button>
-        <button id="italicBtn" type="button"><i>I</i></button>
-        <button id="underlineBtn" type="button"><u>U</u></button>
-      </div>
-<div class="group">
-  <!-- Text Alignment -->
-  <select id="alignSelect">
-    <option value="justifyLeft">Left</option>
-    <option value="justifyCenter">Center</option>
-    <option value="justifyRight">Right</option>
-    <option value="justifyFull">Justify</option>
-  </select>
+  <!-- Ribbon Tabs -->
+<div id="ribbonTabs">
+  <!-- Tab Buttons -->
+  <button class="tabBtn active" data-tab="homeTab">Home</button>
+  <button class="tabBtn" data-tab="insertTab">Insert</button>
 </div>
-<div class="group">
-  <!-- Text Color -->
-  <label for="textColor">Text Color:</label>
-  <input type="color" id="textColor" value="#000000">
 
-  <!-- Text Highlight -->
-  <label for="highlightColor">Highlight:</label>
-  <input type="color" id="highlightColor" value="#ffff00">
-</div>
-      
-<div class="group">
-        <!-- Headings -->
-        <select id="headingSelect">
-          <option value="p">Normal</option>
-          <option value="h1">Heading 1</option>
-          <option value="h2">Heading 2</option>
-          <option value="h3">Heading 3</option>
-        </select>
+<!-- Ribbon Content -->
+<div id="ribbon">
+  <!-- Home Tab -->
+  <div class="tabContent" id="homeTab">
+    <div class="group">
+      <button id="boldBtn" type="button"><b>B</b></button>
+      <button id="italicBtn" type="button"><i>I</i></button>
+      <button id="underlineBtn" type="button"><u>U</u></button>
+    </div>
 
-        <!-- Font family -->
-        <select id="fontSelect">
-          <option value="Arial">Arial</option>
-          <option value="Tahoma">Tahoma</option>
-          <option value="Courier New">Courier New</option>
-        </select>
+    <div class="group">
+      <select id="headingSelect">
+        <option value="p">Normal</option>
+        <option value="h1">Heading 1</option>
+        <option value="h2">Heading 2</option>
+        <option value="h3">Heading 3</option>
+      </select>
 
-        <!-- Font size -->
-        <select id="fontSizeSelect">
-          <option value="3">12px</option>
-          <option value="4">14px</option>
-          <option value="5">18px</option>
-          <option value="6">24px</option>
-          <option value="7">36px</option>
-        </select>
-      </div>
+      <select id="fontSelect">
+        <option value="Arial">Arial</option>
+        <option value="Tahoma">Tahoma</option>
+        <option value="Courier New">Courier New</option>
+      </select>
+
+      <select id="fontSizeSelect">
+        <option value="3">12px</option>
+        <option value="4">14px</option>
+        <option value="5">18px</option>
+        <option value="6">24px</option>
+        <option value="7">36px</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <select id="alignSelect">
+        <option value="left">Align Left</option>
+        <option value="center">Align Center</option>
+        <option value="right">Align Right</option>
+        <option value="justify">Justify</option>
+      </select>
+    </div>
+
+    <div class="group">
+      <label for="textColor">Text:</label>
+      <input type="color" id="textColor" title="Text Color">
+      <label for="highlightColor">Highlight:</label>
+      <input type="color" id="highlightColor" title="Highlight">
+    </div>
+
+    <div class="group">
+      <button id="ulBtn" type="button">• Bullets</button>
+      <button id="olBtn" type="button">1. Numbering</button>
+    </div>
+
+    <div class="group">
+      <button id="indentBtn" type="button">Indent </button>
+      <button id="outdentBtn" type="button">Outdent </button>
     </div>
   </div>
-  <div class="group">
-  <!-- Lists -->
-  <button id="ulBtn" type="button">• List</button>
-  <button id="olBtn" type="button">1. List</button>
-  <!-- //indent// -->
-  <button id="indentBtn" type="button">→ Indent</button>
-  <button id="outdentBtn" type="button">← Outdent</button>
-</div>
+
+  <!-- Insert Tab -->
+  <div class="tabContent" id="insertTab" style="display:none;">
+    <div class="group">
+      <button id="linkBtn" type="button">Insert Link</button>
+      <button id="imageBtn" type="button">Insert Image</button>
+      <button id="tableBtn" type="button">Insert Table</button>
+    </div>
   </div>
+</div>
 
   <!-- Editor -->
   <div id="editor" contenteditable="true">

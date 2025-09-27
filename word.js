@@ -155,8 +155,19 @@ document.getElementById("outdentBtn").addEventListener("mousedown", (e) => {
   editor.execCommand("outdent");
 });
 
+// Tab switching
+document.querySelectorAll(".tabBtn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    // Remove active from all buttons
+    document.querySelectorAll(".tabBtn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
 
+    // Hide all tab contents
+    document.querySelectorAll(".tabContent").forEach((tab) => (tab.style.display = "none"));
 
-
-
+    // Show the clicked tab's content
+    const tabId = btn.getAttribute("data-tab");
+    document.getElementById(tabId).style.display = "block";
+  });
+});
 
