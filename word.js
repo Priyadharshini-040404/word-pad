@@ -122,3 +122,15 @@ document.getElementById("alignSelect").addEventListener("change", (e) => {
   const value = e.target.value; // justifyLeft, justifyCenter, etc.
   editor.execCommand(value);
 });
+
+// Text Color
+document.getElementById("textColor").addEventListener("input", (e) => {
+  const color = e.target.value;
+  editor.execCommand("foreColor", color);
+});
+
+// Highlight / Background Color
+document.getElementById("highlightColor").addEventListener("input", (e) => {
+  const color = e.target.value;
+  editor.execCommand("hiliteColor", color);
+});
