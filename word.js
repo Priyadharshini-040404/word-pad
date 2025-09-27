@@ -263,3 +263,23 @@ document.getElementById("resetBtn").addEventListener("click", () => {
   }
 });
 
+// Copy plain text
+document.getElementById("copyTextBtn").addEventListener("click", () => {
+  navigator.clipboard.writeText(editor.getText())
+    .then(() => alert("Text copied to clipboard"))
+    .catch(err => alert("Failed to copy text"));
+});
+
+// Preview
+document.getElementById("previewBtn").addEventListener("click", () => {
+  const modal = document.getElementById("previewModal");
+  const content = document.getElementById("previewContent");
+  content.innerHTML = editor.getHTML();
+  modal.style.display = "flex";
+});
+
+// Close preview
+document.getElementById("closePreview").addEventListener("click", () => {
+  document.getElementById("previewModal").style.display = "none";
+});
+
