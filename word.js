@@ -177,3 +177,28 @@ document.getElementById("linkBtn").addEventListener("click", () => {
     editor.execCommand("createLink", url);
   }
 });
+// Create hidden file input for image
+const imageInput = document.createElement("input");
+imageInput.type = "file";
+imageInput.accept = "image/*";
+imageInput.style.display = "none";
+document.body.appendChild(imageInput);
+
+// Insert Image Button
+document.getElementById("imageBtn").addEventListener("click", () => {
+  imageInput.click(); // open file dialog
+});
+
+// When file is chosen
+imageInput.addEventListener("change", () => {
+  const file = imageInput.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imgHTML = `<img src="${e.target.result}" style="max-width:200px;">`;
+      editor.execCommand("insertHTML", imgHTML);
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
