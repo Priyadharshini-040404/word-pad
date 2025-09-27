@@ -295,3 +295,15 @@ document.addEventListener("click", (e) => {
     dropdown.style.display = "none";
   }
 });
+// Save as DOC
+document.getElementById("saveDocBtn").addEventListener("click", () => {
+  const content = editor.getHTML();
+  const blob = new Blob([content], { type: "application/msword" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "document.doc";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
