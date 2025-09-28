@@ -299,20 +299,25 @@ document.addEventListener("click", (e) => {
 // Save as DOC
 document.getElementById("saveDocBtn").addEventListener("click", () => {
   const content = document.getElementById("editor").innerHTML;
-  const title = document.getElementById("docTitle").value || "Untitled";
+  const defaultTitle = document.getElementById("docTitle").value || "Untitled";
   const author = document.getElementById("docAuthor").value || "Unknown";
+
+  // Ask user for file name
+  const fileName = prompt("Enter file name for DOC:", defaultTitle);
+  if (!fileName) return; // Cancel if user presses Cancel
+
   const wordHeader = `
   <html xmlns:o='urn:schemas-microsoft-com:office:office'
         xmlns:w='urn:schemas-microsoft-com:office:word'
         xmlns='http://www.w3.org/TR/REC-html40'>
   <head>
     <meta charset="UTF-8">
-    <title>${title}</title>
+    <title>${fileName}</title>
     <!-- Word-specific metadata -->
     <xml>
       <w:WordDocument>
         <w:Author>${author}</w:Author>
-        <w:Title>${title}</w:Title>
+        <w:Title>${fileName}</w:Title>
       </w:WordDocument>
     </xml>
   </head>
@@ -320,21 +325,28 @@ document.getElementById("saveDocBtn").addEventListener("click", () => {
     ${content}
   </body>
   </html>`;
+
   const blob = new Blob([wordHeader], { type: "application/msword" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = title + ".doc";
+  link.download = fileName + ".doc";
   link.click();
+  URL.revokeObjectURL(link.href);
 });
+
 // Save as PDF
 document.getElementById("savePdfBtn").addEventListener("click", () => {
   const element = document.getElementById("editor");
-  const title = document.getElementById("docTitle").value || "Untitled";
+  const defaultTitle = document.getElementById("docTitle").value || "Untitled";
   const author = document.getElementById("docAuthor").value || "Unknown";
+
+  // Ask user for file name
+  const fileName = prompt("Enter file name for PDF:", defaultTitle);
+  if (!fileName) return; // Cancel if user presses Cancel
 
   const opt = {
     margin: 0.5,
-    filename: title + ".pdf",
+    filename: fileName + ".pdf",
     html2canvas: { scale: 2 },
     jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
   };
@@ -346,7 +358,7 @@ document.getElementById("savePdfBtn").addEventListener("click", () => {
     .get('pdf')
     .then((pdf) => {
       pdf.setProperties({
-        title: title,
+        title: fileName,
         author: author,
         subject: "Mini WordPad Export",
         keywords: "WordPad, Editor, Export, PDF",
@@ -355,6 +367,7 @@ document.getElementById("savePdfBtn").addEventListener("click", () => {
     })
     .save();
 });
+
 let matches = [];      // all found ranges
 let currentMatch = -1; // index of currently highlighted match
 let currentRange = null;
@@ -440,6 +453,65 @@ document.getElementById("replaceAllBtn").addEventListener("click", () => {
   matches = [];
   currentMatch = -1;
   clearHighlight();
+});
+const toggleThemeBtn = document.getElementById("toggleThemeBtn");
+
+toggleThemeBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+  document.getElementById("editor").classList.toggle("dark-mode");
+
+  // Optional: Toggle ribbon and buttons
+  document.getElementById("ribbon").classList.toggle("dark-mode");
+  document.querySelectorAll(".tabBtn, .group").forEach(el => el.classList.toggle("dark-mode"));
+});
+let autoSaveIntervalId = null;
+const AUTO_SAVE_INTERVAL = 5000; // 5 seconds
+const toggleAutoSaveBtn = document.getElementById("toggleAutoSaveBtn");
+const autoSaveStatus = document.getElementById("autoSaveStatus");
+
+function autoSave() {
+  const content = editor.getHTML();
+  const title = document.getElementById("docTitle")?.value || "";
+  const author = document.getElementById("docAuthor")?.value || "";
+  const theme = document.body.classList.contains("dark-mode") ? "dark" : "light";
+
+  const saveData = { content, title, author, theme };
+  localStorage.setItem("miniWordPadData", JSON.stringify(saveData));
+
+  const time = new Date().toLocaleTimeString();
+  autoSaveStatus.textContent = `Auto-saved at ${time}`;
+}
+
+// Toggle Auto-save
+toggleAutoSaveBtn.addEventListener("click", () => {
+  if (autoSaveIntervalId) {
+    clearInterval(autoSaveIntervalId);
+    autoSaveIntervalId = null;
+    toggleAutoSaveBtn.textContent = "Enable Auto-save";
+    autoSaveStatus.textContent = "Auto-save: Off";
+  } else {
+    autoSave(); // optional: save immediately when enabling
+    autoSaveIntervalId = setInterval(autoSave, AUTO_SAVE_INTERVAL);
+    toggleAutoSaveBtn.textContent = "Disable Auto-save";
+    autoSaveStatus.textContent = "Auto-save: On";
+  }
+});
+
+// Restore saved content on page load
+window.addEventListener("load", () => {
+  const savedData = localStorage.getItem("miniWordPadData");
+  if (savedData) {
+    const { content, title, author, theme } = JSON.parse(savedData);
+    editor.editor.innerHTML = content || "";
+    if (document.getElementById("docTitle")) document.getElementById("docTitle").value = title || "";
+    if (document.getElementById("docAuthor")) document.getElementById("docAuthor").value = author || "";
+    if (theme === "dark") {
+      document.body.classList.add("dark-mode");
+      document.getElementById("editor").classList.add("dark-mode");
+      document.getElementById("ribbon").classList.add("dark-mode");
+      document.querySelectorAll(".tabBtn, .group").forEach(el => el.classList.add("dark-mode"));
+    }
+  }
 });
 
 
