@@ -306,4 +306,20 @@ document.getElementById("saveDocBtn").addEventListener("click", () => {
   a.click();
   URL.revokeObjectURL(url);
 });
+// Save as PDF
+document.getElementById("savePdfBtn").addEventListener("click", () => {
+  const element = document.getElementById("editor");
+
+  const opt = {
+    margin:       0.5,
+    filename:     "document.pdf",  // always downloads with this name
+    image:        { type: "jpeg", quality: 0.98 },
+    html2canvas:  { scale: 2 },
+    jsPDF:        { unit: "in", format: "a4", orientation: "portrait" }
+  };
+
+  // Generate and directly save (no preview/open)
+  html2pdf().set(opt).from(element).save();
+});
+
 
