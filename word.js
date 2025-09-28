@@ -231,8 +231,8 @@ document.getElementById("tableBtn").addEventListener("click", () => {
     editor.execCommand("insertHTML", table);
   }
 });
-// Clear formatting (remove inline styles and formatting tags)
-document.getElementById("clearFormattingBtn").addEventListener("click", () => {
+// Clear formatting (remove inline styles, keep headings/bold/italic/underline)
+document.getElementById("clearFormatBtn").addEventListener("click", () => {
   const html = editor.getHTML();
   const tempDiv = document.createElement("div");
   tempDiv.innerHTML = html;
@@ -243,8 +243,8 @@ document.getElementById("clearFormattingBtn").addEventListener("click", () => {
       node.removeAttribute("class");
       Array.from(node.childNodes).forEach(cleanNode);
 
-      // Optional: unwrap bold, italic, underline, headings
-      if (["B","I","U","H1","H2","H3","SPAN"].includes(node.tagName)) {
+      // Only unwrap SPAN (keep semantic tags like B, I, U, H1, H2, H3)
+      if (["SPAN"].includes(node.tagName)) {
         const parent = node.parentNode;
         while (node.firstChild) parent.insertBefore(node.firstChild, node);
         parent.removeChild(node);
@@ -282,6 +282,7 @@ document.getElementById("previewBtn").addEventListener("click", () => {
 document.getElementById("closePreview").addEventListener("click", () => {
   document.getElementById("previewModal").style.display = "none";
 });
+
 // Toggle File dropdown
 document.getElementById("fileTabBtn").addEventListener("click", () => {
   const dropdown = document.getElementById("fileDropdown");
