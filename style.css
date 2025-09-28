@@ -133,3 +133,8 @@ body.dark-mode {
 body.dark-mode #autoSaveStatus {
   color: #ccc;
 }
+#editorControls button {
+  margin-right: 5px;
+  padding: 6px 10px;
+  cursor: pointer;
+}

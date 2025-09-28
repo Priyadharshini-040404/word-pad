@@ -270,6 +270,12 @@ document.getElementById("copyTextBtn").addEventListener("click", () => {
     .catch(err => alert("Failed to copy text"));
 });
 
+// Copy HTML
+document.getElementById("copyHtmlBtn").addEventListener("click", () => {
+  navigator.clipboard.writeText(editor.getHTML())
+    .then(() => alert("HTML copied to clipboard"))
+    .catch(err => alert("Failed to copy HTML"));
+});
 // Preview
 document.getElementById("previewBtn").addEventListener("click", () => {
   const modal = document.getElementById("previewModal");
@@ -513,6 +519,44 @@ window.addEventListener("load", () => {
     }
   }
 });
+// Save editor content as HTML
+document.getElementById("saveHtmlBtn").addEventListener("click", () => {
+  const content = document.getElementById("editor").innerHTML;
+  const defaultName = document.getElementById("docTitle").value || "Document";
+  const fileName = prompt("Enter file name for HTML:", defaultName);
+  if (!fileName) return;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>${fileName}</title>
+    </head>
+    <body>
+      ${content}
+    </body>
+    </html>
+  `;
+
+  const blob = new Blob([htmlContent], { type: "text/html" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName + ".html";
+  link.click();
+  URL.revokeObjectURL(link.href);
+});
+
+// Undo last action
+document.getElementById("undoBtn").addEventListener("click", () => {
+  document.execCommand("undo");
+});
+
+// Redo last undone action
+document.getElementById("redoBtn").addEventListener("click", () => {
+  document.execCommand("redo");
+});
+
 
 
 
