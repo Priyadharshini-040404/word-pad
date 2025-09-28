@@ -298,29 +298,59 @@ document.addEventListener("click", (e) => {
 });
 // Save as DOC
 document.getElementById("saveDocBtn").addEventListener("click", () => {
-  const content = editor.getHTML();
-  const blob = new Blob([content], { type: "application/msword" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "document.doc";
-  a.click();
-  URL.revokeObjectURL(url);
+  const content = document.getElementById("editor").innerHTML;
+  // Word-compatible metadata
+  const wordHeader = `
+  <html xmlns:o='urn:schemas-microsoft-com:office:office'
+        xmlns:w='urn:schemas-microsoft-com:office:word'
+        xmlns='http://www.w3.org/TR/REC-html40'>
+  <head>
+    <title>My WordPad Document</title>
+    <!-- Word Metadata -->
+    <meta name=Title content="My WordPad Document">
+    <meta name=Author content="Priyadharshini A">
+    <meta name=Subject content="Mini WordPad Export">
+    <meta name=Keywords content="WordPad, Editor, Export, DOC">
+  </head>
+  <body>
+    ${content}
+  </body>
+  </html>`;
+  const blob = new Blob([wordHeader], { type: "application/msword" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "document.doc";
+  link.click();
 });
+
 // Save as PDF
 document.getElementById("savePdfBtn").addEventListener("click", () => {
   const element = document.getElementById("editor");
-
   const opt = {
-    margin:       0.5,
-    filename:     "document.pdf",  // always downloads with this name
-    image:        { type: "jpeg", quality: 0.98 },
-    html2canvas:  { scale: 2 },
-    jsPDF:        { unit: "in", format: "a4", orientation: "portrait" }
+    margin: 0.5,
+    filename: "document.pdf",
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
   };
-
-  // Generate and directly save (no preview/open)
-  html2pdf().set(opt).from(element).save();
+  // Use html2pdf with metadata injection
+  html2pdf()
+    .set(opt)
+    .from(element)
+    .toPdf()
+    .get('pdf')
+    .then((pdf) => {
+      // Add metadata here
+      pdf.setProperties({
+        title: "My WordPad Document",
+        subject: "Mini WordPad Export",
+        author: "Priyadharshini A",
+        keywords: "WordPad, Editor, Export, PDF",
+        creator: "Mini WordPad"
+      });
+    })
+    .save();
 });
+
+
 
 
