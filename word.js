@@ -299,18 +299,22 @@ document.addEventListener("click", (e) => {
 // Save as DOC
 document.getElementById("saveDocBtn").addEventListener("click", () => {
   const content = document.getElementById("editor").innerHTML;
-  // Word-compatible metadata
+  const title = document.getElementById("docTitle").value || "Untitled";
+  const author = document.getElementById("docAuthor").value || "Unknown";
   const wordHeader = `
   <html xmlns:o='urn:schemas-microsoft-com:office:office'
         xmlns:w='urn:schemas-microsoft-com:office:word'
         xmlns='http://www.w3.org/TR/REC-html40'>
   <head>
-    <title>My WordPad Document</title>
-    <!-- Word Metadata -->
-    <meta name=Title content="My WordPad Document">
-    <meta name=Author content="Priyadharshini A">
-    <meta name=Subject content="Mini WordPad Export">
-    <meta name=Keywords content="WordPad, Editor, Export, DOC">
+    <meta charset="UTF-8">
+    <title>${title}</title>
+    <!-- Word-specific metadata -->
+    <xml>
+      <w:WordDocument>
+        <w:Author>${author}</w:Author>
+        <w:Title>${title}</w:Title>
+      </w:WordDocument>
+    </xml>
   </head>
   <body>
     ${content}
@@ -319,37 +323,125 @@ document.getElementById("saveDocBtn").addEventListener("click", () => {
   const blob = new Blob([wordHeader], { type: "application/msword" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = "document.doc";
+  link.download = title + ".doc";
   link.click();
 });
-
 // Save as PDF
 document.getElementById("savePdfBtn").addEventListener("click", () => {
   const element = document.getElementById("editor");
+  const title = document.getElementById("docTitle").value || "Untitled";
+  const author = document.getElementById("docAuthor").value || "Unknown";
+
   const opt = {
     margin: 0.5,
-    filename: "document.pdf",
+    filename: title + ".pdf",
     html2canvas: { scale: 2 },
     jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
   };
-  // Use html2pdf with metadata injection
+
   html2pdf()
     .set(opt)
     .from(element)
     .toPdf()
     .get('pdf')
     .then((pdf) => {
-      // Add metadata here
       pdf.setProperties({
-        title: "My WordPad Document",
+        title: title,
+        author: author,
         subject: "Mini WordPad Export",
-        author: "Priyadharshini A",
         keywords: "WordPad, Editor, Export, PDF",
         creator: "Mini WordPad"
       });
     })
     .save();
 });
+let matches = [];      // all found ranges
+let currentMatch = -1; // index of currently highlighted match
+let currentRange = null;
+
+// Clear current highlight
+function clearHighlight() {
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  currentRange = null;
+}
+
+// Build matches for current search term (partial matches allowed)
+function buildMatches(searchText) {
+  matches = [];
+  currentMatch = -1;
+  if (!searchText) return;
+
+  const walker = document.createTreeWalker(editor.editor, NodeFilter.SHOW_TEXT);
+  const regex = new RegExp(searchText, "gi"); // remove \b for partial matches
+  let node;
+  while (node = walker.nextNode()) {
+    let match;
+    while ((match = regex.exec(node.textContent)) !== null) {
+      const range = document.createRange();
+      range.setStart(node, match.index);
+      range.setEnd(node, match.index + match[0].length);
+      matches.push(range);
+    }
+  }
+}
+
+// Highlight the next match
+function highlightNext() {
+  if (matches.length === 0) return alert("No matches found");
+  clearHighlight();
+  currentMatch = (currentMatch + 1) % matches.length;
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(matches[currentMatch]);
+  currentRange = matches[currentMatch];
+  currentRange.startContainer.parentNode.scrollIntoView({behavior:"smooth", block:"center"});
+}
+
+// Find Next button
+document.getElementById("findBtn").addEventListener("click", () => {
+  const searchText = document.getElementById("findInput").value;
+  if (!searchText) return;
+
+  // If new search term, rebuild matches
+  if (!matches.length || searchText.toLowerCase() !== document.getElementById("findInput").dataset.lastSearch) {
+    buildMatches(searchText);
+    document.getElementById("findInput").dataset.lastSearch = searchText.toLowerCase();
+  }
+  highlightNext();
+});
+
+// Replace currently highlighted occurrence
+document.getElementById("replaceBtn").addEventListener("click", () => {
+  if (!currentRange) return alert("No text selected to replace");
+  const replaceText = document.getElementById("replaceInput").value;
+  currentRange.deleteContents();
+  currentRange.insertNode(document.createTextNode(replaceText));
+  clearHighlight();
+
+  // After replace, remove this match and adjust currentMatch index
+  matches.splice(currentMatch, 1);
+  currentMatch--; // decrement so next highlightNext() highlights the correct next match
+});
+
+// Replace All
+document.getElementById("replaceAllBtn").addEventListener("click", () => {
+  const searchText = document.getElementById("findInput").value;
+  const replaceText = document.getElementById("replaceInput").value;
+  if (!searchText) return;
+
+  const walker = document.createTreeWalker(editor.editor, NodeFilter.SHOW_TEXT);
+  const regex = new RegExp(searchText, "gi"); // partial matches
+  let node;
+  while (node = walker.nextNode()) {
+    node.textContent = node.textContent.replace(regex, replaceText);
+  }
+
+  matches = [];
+  currentMatch = -1;
+  clearHighlight();
+});
+
 
 
 

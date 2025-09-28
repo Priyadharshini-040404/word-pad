@@ -93,3 +93,6 @@ body {
 .dropdown-content button:hover {
   background: #eee;
 }
+.find-highlight {
+  background-color: yellow;
+}

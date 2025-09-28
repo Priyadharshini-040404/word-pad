@@ -10,20 +10,35 @@
   <h2>Mini WordPad</h2>
 <div id="ribbonTabs">
   <!-- File Tab -->
-  <div class="dropdown">
-    <button class="tabBtn" id="fileTabBtn">File ▾</button>
-    <div class="dropdown-content" id="fileDropdown" style="display:none; position:absolute;
-     background:#fff; border:1px solid #ccc; z-index:1000;">
-      <button id="saveDocBtn" type="button">Save as DOC</button>
-      <button id="savePdfBtn" type="button">Save as PDF</button>
+<div class="dropdown">
+  <button class="tabBtn" id="fileTabBtn">File ▾</button>
+  <div class="dropdown-content" id="fileDropdown" style="display:none; position:absolute; background:#fff; border:1px solid #ccc; z-index:1000; padding:10px; min-width:200px;">
+    
+    <!-- Title input -->
+    <div class="group" style="margin-bottom:5px;">
+      <label for="docTitle">Title:</label>
+      <input type="text" id="docTitle" placeholder="Document Title" value="My WordPad Document" style="width:100%;">
     </div>
+    
+    <!-- Author input -->
+    <div class="group" style="margin-bottom:10px;">
+      <label for="docAuthor">Author:</label>
+      <input type="text" id="docAuthor" placeholder="Author Name" value="Priyadharshini A" style="width:100%;">
+    </div>
+    
+    <!-- Save buttons -->
+    <button id="saveDocBtn" type="button" style="width:100%; margin-bottom:5px;">Save as DOC</button>
+    <button id="savePdfBtn" type="button" style="width:100%;">Save as PDF</button>
   </div>
+</div>
+
 
   <!-- Home & Insert Tabs -->
   <button class="tabBtn active" data-tab="homeTab">Home</button>
   <button class="tabBtn" data-tab="structureTab">Structure</button>
   <button class="tabBtn" data-tab="insertTab">Insert</button>
   <button class="tabBtn" data-tab="docOpsTab">Doc Operations</button>
+   <button class="tabBtn" data-tab="searchTab">Search</button>
   </div>
 <!-- Ribbon Content -->
 <div id="ribbon">
@@ -117,6 +132,22 @@
     <span id="closePreview" style="position:absolute; top:10px; right:15px; cursor:pointer; font-weight:bold;">&times;</span>
     <h3>Document Preview</h3>
     <div id="previewContent" style="border:1px solid #ccc; padding:10px;"></div>
+  </div>
+</div>
+<!-- Search Tab -->
+<div class="tabContent" id="searchTab" style="display:none;">
+  <div class="group">
+    <label for="findInput">Find:</label>
+    <input type="text" id="findInput" placeholder="Text to find">
+  </div>
+  <div class="group">
+    <label for="replaceInput">Replace with:</label>
+    <input type="text" id="replaceInput" placeholder="Replacement text">
+  </div>
+  <div class="group">
+    <button id="findBtn" type="button">Find Next</button>
+    <button id="replaceBtn" type="button">Replace</button>
+    <button id="replaceAllBtn" type="button">Replace All</button>
   </div>
 </div>
   <!-- Editor -->
