@@ -399,24 +399,228 @@ imageInput.addEventListener("change", () => {
   reader.readAsDataURL(file);
 });
 
-
-//Insert table//
+// Insert Table Button
 document.getElementById("tableBtn").addEventListener("click", () => {
   const rows = parseInt(prompt("Number of rows?", 2));
   const cols = parseInt(prompt("Number of columns?", 2));
-  if (rows > 0 && cols > 0) {
-    let table = `<table border="1" style="border-collapse:collapse; width:80%; max-width:600px;">`;
-    for (let r = 0; r < rows; r++) {
-      table += "<tr>";
-      for (let c = 0; c < cols; c++) {
-        table += `<td style="padding:10px;">&nbsp;</td>`;
-      }
-      table += "</tr>";
+  if (rows <= 0 || cols <= 0) return;
+
+  // --- Wrapper container ---
+  const wrapper = document.createElement("div");
+  wrapper.className = "table-wrapper";
+  wrapper.style.position = "absolute";
+  wrapper.style.display = "inline-block";
+  wrapper.style.border = "2px solid black";
+  wrapper.style.minWidth = "150px";
+  wrapper.style.minHeight = "50px";
+  wrapper.style.background = "#fff";
+  wrapper.style.boxSizing = "border-box";
+
+  // --- Table inside wrapper ---
+  const table = document.createElement("table");
+  table.style.borderCollapse = "collapse";
+  table.style.width = "100%";
+  table.style.height = "100%";
+  table.style.tableLayout = "fixed"; // important for shrinking
+
+  for (let r = 0; r < rows; r++) {
+    const tr = document.createElement("tr");
+    for (let c = 0; c < cols; c++) {
+      const td = document.createElement("td");
+      td.style.border = "1px solid black";
+      td.style.padding = "5px";
+      td.style.overflow = "hidden"; // prevent content overflow
+      td.style.wordBreak = "break-word";
+      td.innerHTML = "&nbsp;";
+      tr.appendChild(td);
     }
-    table += "</table><br>";
-    editor.execCommand("insertHTML", table);
+    table.appendChild(tr);
   }
+
+  wrapper.appendChild(table);
+
+  // --- Delete button ---
+  const delBtn = document.createElement("span");
+  delBtn.textContent = "×";
+  delBtn.style.position = "absolute";
+  delBtn.style.top = "-10px";
+  delBtn.style.right = "-10px";
+  delBtn.style.width = "20px";
+  delBtn.style.height = "20px";
+  delBtn.style.background = "red";
+  delBtn.style.color = "white";
+  delBtn.style.textAlign = "center";
+  delBtn.style.lineHeight = "18px";
+  delBtn.style.fontWeight = "bold";
+  delBtn.style.borderRadius = "50%";
+  delBtn.style.cursor = "pointer";
+  delBtn.addEventListener("click", () => wrapper.remove());
+  wrapper.appendChild(delBtn);
+
+  // --- Resize handle ---
+  const resizeHandle = document.createElement("div");
+  resizeHandle.style.position = "absolute";
+  resizeHandle.style.width = "12px";
+  resizeHandle.style.height = "12px";
+  resizeHandle.style.right = "-6px";
+  resizeHandle.style.bottom = "-6px";
+  resizeHandle.style.border = "2px dotted black";
+  resizeHandle.style.background = "white";
+  resizeHandle.style.cursor = "se-resize";
+  wrapper.appendChild(resizeHandle);
+
+  const editorRect = editor.editor.getBoundingClientRect();
+
+  // --- Drag wrapper ---
+  let isDragging = false, startX, startY, startLeft, startTop;
+  wrapper.addEventListener("mousedown", (ev) => {
+    if (ev.target === resizeHandle || ev.target === delBtn) return;
+    ev.preventDefault();
+    isDragging = true;
+    startX = ev.clientX;
+    startY = ev.clientY;
+    const rect = wrapper.getBoundingClientRect();
+    startLeft = rect.left + window.scrollX;
+    startTop = rect.top + window.scrollY;
+  });
+
+  document.addEventListener("mousemove", (ev) => {
+    if (!isDragging) return;
+    let newLeft = startLeft + ev.clientX - startX;
+    let newTop = startTop + ev.clientY - startY;
+
+    const wrapRect = wrapper.getBoundingClientRect();
+    newLeft = Math.max(editorRect.left + window.scrollX, Math.min(newLeft, editorRect.right + window.scrollX - wrapRect.width));
+    newTop = Math.max(editorRect.top + window.scrollY, Math.min(newTop, editorRect.bottom + window.scrollY - wrapRect.height));
+
+    wrapper.style.left = newLeft + "px";
+    wrapper.style.top = newTop + "px";
+    wrapper.style.zIndex = "1000";
+  });
+
+  document.addEventListener("mouseup", () => isDragging = false);
+
+  // --- Resize wrapper ---
+  let isResizing = false, resizeStartX, resizeStartY, startWidth, startHeight;
+  resizeHandle.addEventListener("mousedown", (ev) => {
+    ev.stopPropagation();
+    ev.preventDefault();
+    isResizing = true;
+    resizeStartX = ev.clientX;
+    resizeStartY = ev.clientY;
+    startWidth = wrapper.offsetWidth;
+    startHeight = wrapper.offsetHeight;
+  });
+
+  document.addEventListener("mousemove", (ev) => {
+    if (!isResizing) return;
+    const newWidth = startWidth + (ev.clientX - resizeStartX);
+    const newHeight = startHeight + (ev.clientY - resizeStartY);
+
+    wrapper.style.width = Math.max(newWidth, 100) + "px";
+    wrapper.style.height = Math.max(newHeight, 50) + "px";
+
+    // Force table to always fill wrapper
+    table.style.width = "100%";
+    table.style.height = "100%";
+  });
+
+  document.addEventListener("mouseup", () => isResizing = false);
+
+  // --- Context menu (add/remove row/col, delete) ---
+  wrapper.addEventListener("contextmenu", (ev) => {
+    ev.preventDefault();
+    const oldMenu = document.getElementById("table-context-menu");
+    if (oldMenu) oldMenu.remove();
+
+    const menu = document.createElement("div");
+    menu.id = "table-context-menu";
+    menu.style.position = "absolute";
+    menu.style.left = ev.pageX + "px";
+    menu.style.top = ev.pageY + "px";
+    menu.style.background = "#fff";
+    menu.style.border = "1px solid #ccc";
+    menu.style.padding = "5px";
+    menu.style.zIndex = "2000";
+    menu.style.fontFamily = "Arial, sans-serif";
+
+    const addRow = document.createElement("div");
+    addRow.textContent = "Add Row";
+    addRow.style.cursor = "pointer";
+    addRow.onclick = () => {
+      const tr = document.createElement("tr");
+      for (let i = 0; i < table.rows[0].cells.length; i++) {
+        const td = document.createElement("td");
+        td.style.border = "1px solid black";
+        td.style.padding = "5px";
+        td.innerHTML = "&nbsp;";
+        tr.appendChild(td);
+      }
+      table.appendChild(tr);
+      menu.remove();
+    };
+
+    const addCol = document.createElement("div");
+    addCol.textContent = "Add Column";
+    addCol.style.cursor = "pointer";
+    addCol.onclick = () => {
+      for (let r = 0; r < table.rows.length; r++) {
+        const td = document.createElement("td");
+        td.style.border = "1px solid black";
+        td.style.padding = "5px";
+        td.innerHTML = "&nbsp;";
+        table.rows[r].appendChild(td);
+      }
+      menu.remove();
+    };
+
+    const removeRow = document.createElement("div");
+    removeRow.textContent = "Remove Row";
+    removeRow.style.cursor = "pointer";
+    removeRow.onclick = () => {
+      if (table.rows.length > 1) table.deleteRow(table.rows.length - 1);
+      menu.remove();
+    };
+
+    const removeCol = document.createElement("div");
+    removeCol.textContent = "Remove Column";
+    removeCol.style.cursor = "pointer";
+    removeCol.onclick = () => {
+      if (table.rows[0].cells.length > 1) {
+        for (let r = 0; r < table.rows.length; r++) {
+          table.rows[r].deleteCell(table.rows[r].cells.length - 1);
+        }
+      }
+      menu.remove();
+    };
+
+    const deleteTable = document.createElement("div");
+    deleteTable.textContent = "Delete Table";
+    deleteTable.style.cursor = "pointer";
+    deleteTable.onclick = () => {
+      wrapper.remove();
+      menu.remove();
+    };
+
+    [addRow, addCol, removeRow, removeCol, deleteTable].forEach(item => {
+      item.style.padding = "3px 5px";
+      item.onmouseenter = () => item.style.background = "#eee";
+      item.onmouseleave = () => item.style.background = "#fff";
+      menu.appendChild(item);
+    });
+
+    document.body.appendChild(menu);
+
+    document.addEventListener("click", () => {
+      const menuEl = document.getElementById("table-context-menu");
+      if (menuEl) menuEl.remove();
+    }, { once: true });
+  });
+
+  editor.editor.appendChild(wrapper);
 });
+
+
 // Clear formatting (remove inline styles, keep headings/bold/italic/underline)
 document.getElementById("clearFormatBtn").addEventListener("click", () => {
   const html = editor.getHTML();
