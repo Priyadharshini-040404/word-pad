@@ -200,6 +200,7 @@ document.body.appendChild(imageInput);
 
 // Insert Image Button
 document.getElementById("imageBtn").addEventListener("click", () => {
+  imageInput.value = ""; // reset so same file can be reselected
   imageInput.click();
 });
 
@@ -209,7 +210,6 @@ imageInput.addEventListener("change", () => {
 
   const reader = new FileReader();
   reader.onload = (e) => {
-    // Create wrapper
     const span = document.createElement("span");
     span.className = "resizable-img";
     span.contentEditable = "false";
@@ -218,16 +218,15 @@ imageInput.addEventListener("change", () => {
     span.style.border = "1px dashed #aaa";
     span.style.padding = "2px";
     span.style.margin = "2px";
-    span.style.cursor = "move"; // show that it’s draggable
+    span.style.cursor = "move";
 
-    // Create image
     const img = document.createElement("img");
     img.src = e.target.result;
     img.style.display = "block";
-    img.style.maxWidth = "100%";
+    img.style.width = "200px"; // default smaller size
     img.style.height = "auto";
 
-    // Create resize handle
+    // Resize handle
     const handle = document.createElement("span");
     handle.className = "resizable-handle";
     handle.style.position = "absolute";
@@ -239,23 +238,42 @@ imageInput.addEventListener("change", () => {
     handle.style.bottom = "0";
     handle.style.cursor = "se-resize";
 
+    // Delete button
+    const delBtn = document.createElement("span");
+    delBtn.textContent = "×";
+    delBtn.style.position = "absolute";
+    delBtn.style.top = "-8px";
+    delBtn.style.right = "-8px";
+    delBtn.style.width = "16px";
+    delBtn.style.height = "16px";
+    delBtn.style.background = "red";
+    delBtn.style.color = "white";
+    delBtn.style.fontWeight = "bold";
+    delBtn.style.textAlign = "center";
+    delBtn.style.lineHeight = "16px";
+    delBtn.style.borderRadius = "50%";
+    delBtn.style.cursor = "pointer";
+    delBtn.addEventListener("click", () => span.remove());
+
     span.appendChild(img);
     span.appendChild(handle);
+    span.appendChild(delBtn);
     editor.editor.appendChild(span);
 
-    // ------------------ RESIZE ------------------
-    let startX, startY, startWidth, startHeight;
-    handle.addEventListener("mousedown", (ev) => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      startX = ev.clientX;
-      startY = ev.clientY;
-      startWidth = img.offsetWidth;
-      startHeight = img.offsetHeight;
+    const editorRect = editor.editor.getBoundingClientRect();
 
-      function onMouseMove(eMove) {
-        const newWidth = startWidth + (eMove.clientX - startX);
-        const newHeight = startHeight + (eMove.clientY - startY);
+    // --- RESIZE ---
+    handle.addEventListener("mousedown", (ev) => {
+      ev.stopPropagation();
+      ev.preventDefault();
+      let startX = ev.clientX;
+      let startY = ev.clientY;
+      let startWidth = img.offsetWidth;
+      let startHeight = img.offsetHeight;
+
+      function onMouseMove(e) {
+        const newWidth = startWidth + (e.clientX - startX);
+        const newHeight = startHeight + (e.clientY - startY);
         img.style.width = newWidth + "px";
         img.style.height = newHeight + "px";
       }
@@ -269,38 +287,118 @@ imageInput.addEventListener("change", () => {
       document.addEventListener("mouseup", onMouseUp);
     });
 
-    // ------------------ DRAG ------------------
-    let dragStartX, dragStartY, spanStartLeft, spanStartTop, isDragging = false;
+    // --- DRAG ---
+    let isDragging = false;
+    let dragEnabled = true; // for disabling drag during cropping
     span.addEventListener("mousedown", (ev) => {
-      if (ev.target === handle) return; // skip if resizing
+      if (!dragEnabled) return;
+      if (ev.target === handle || ev.target === delBtn) return;
       ev.preventDefault();
       isDragging = true;
-      dragStartX = ev.clientX;
-      dragStartY = ev.clientY;
 
+      const startX = ev.clientX;
+      const startY = ev.clientY;
       const rect = span.getBoundingClientRect();
-      spanStartLeft = rect.left + window.scrollX;
-      spanStartTop = rect.top + window.scrollY;
+      let offsetLeft = rect.left + window.scrollX;
+      let offsetTop = rect.top + window.scrollY;
 
-      span.style.position = "absolute";
-      span.style.zIndex = "1000";
+      function onMouseMove(e) {
+        if (!isDragging) return;
+
+        let newLeft = offsetLeft + e.clientX - startX;
+        let newTop = offsetTop + e.clientY - startY;
+
+        // Restrict drag within editor
+        const spanRect = span.getBoundingClientRect();
+        const editorRect = editor.editor.getBoundingClientRect();
+
+        newLeft = Math.max(editorRect.left + window.scrollX, Math.min(newLeft, editorRect.right + window.scrollX - spanRect.width));
+        newTop = Math.max(editorRect.top + window.scrollY, Math.min(newTop, editorRect.bottom + window.scrollY - spanRect.height));
+
+        span.style.position = "absolute";
+        span.style.left = newLeft + "px";
+        span.style.top = newTop + "px";
+        span.style.zIndex = "1000";
+      }
+
+      function onMouseUp() {
+        isDragging = false;
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+      }
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
     });
 
-    document.addEventListener("mousemove", (evMove) => {
-      if (!isDragging) return;
-      const dx = evMove.clientX - dragStartX;
-      const dy = evMove.clientY - dragStartY;
-      span.style.left = spanStartLeft + dx + "px";
-      span.style.top = spanStartTop + dy + "px";
-    });
+    // --- DOUBLE CLICK CROP ---
+    img.addEventListener("dblclick", () => {
+      dragEnabled = false;
 
-    document.addEventListener("mouseup", () => {
-      isDragging = false;
+      let cropStartX, cropStartY, cropRect;
+      const imgRect = img.getBoundingClientRect();
+
+      function onMouseDown(ev) {
+        ev.preventDefault();
+        cropStartX = ev.clientX - imgRect.left;
+        cropStartY = ev.clientY - imgRect.top;
+
+        cropRect = document.createElement("div");
+        cropRect.style.position = "absolute";
+        cropRect.style.border = "2px dashed red";
+        cropRect.style.background = "rgba(255,255,255,0.3)";
+        cropRect.style.left = cropStartX + "px";
+        cropRect.style.top = cropStartY + "px";
+        cropRect.style.width = "0px";
+        cropRect.style.height = "0px";
+        span.appendChild(cropRect);
+
+        span.addEventListener("mousemove", onMouseMove);
+        span.addEventListener("mouseup", onMouseUp);
+      }
+
+      function onMouseMove(ev) {
+        const x = ev.clientX - imgRect.left;
+        const y = ev.clientY - imgRect.top;
+        cropRect.style.left = Math.min(cropStartX, x) + "px";
+        cropRect.style.top = Math.min(cropStartY, y) + "px";
+        cropRect.style.width = Math.abs(x - cropStartX) + "px";
+        cropRect.style.height = Math.abs(y - cropStartY) + "px";
+      }
+
+      function onMouseUp() {
+        span.removeEventListener("mousemove", onMouseMove);
+        span.removeEventListener("mouseup", onMouseUp);
+
+        const sx = parseInt(parseInt(cropRect.style.left) / img.offsetWidth * img.naturalWidth);
+        const sy = parseInt(parseInt(cropRect.style.top) / img.offsetHeight * img.naturalHeight);
+        const sw = parseInt(parseInt(cropRect.style.width) / img.offsetWidth * img.naturalWidth);
+        const sh = parseInt(parseInt(cropRect.style.height) / img.offsetHeight * img.naturalHeight);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = sw;
+        canvas.height = sh;
+        const ctx = canvas.getContext("2d");
+
+        const tempImg = new Image();
+        tempImg.onload = () => {
+          ctx.drawImage(tempImg, sx, sy, sw, sh, 0, 0, sw, sh);
+          img.src = canvas.toDataURL();
+          img.style.width = "200px";
+          img.style.height = "auto";
+          cropRect.remove();
+          dragEnabled = true;
+        };
+        tempImg.src = img.src;
+      }
+
+      img.addEventListener("mousedown", onMouseDown, { once: true });
     });
   };
 
   reader.readAsDataURL(file);
 });
+
 
 //Insert table//
 document.getElementById("tableBtn").addEventListener("click", () => {
@@ -462,8 +560,8 @@ document.getElementById("savePdfBtn").addEventListener("click", () => {
     .save();
 });
 
-let matches = [];      // all found ranges
-let currentMatch = -1; // index of currently highlighted match
+let matches = [];      
+let currentMatch = -1; 
 let currentRange = null;
 
 // Clear current highlight

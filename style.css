@@ -129,7 +129,6 @@ body.dark-mode {
   font-family: Arial, sans-serif;
   color: #555;
 }
-
 /* Dark mode support */
 body.dark-mode #autoSaveStatus {
   color: #ccc;
@@ -160,5 +159,4 @@ body.dark-mode #autoSaveStatus {
   bottom: 0;
   cursor: se-resize;
 }
-
 
