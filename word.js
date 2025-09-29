@@ -15,7 +15,7 @@ class Editor {
         while (block && block !== this.editor && block.nodeName !== "DIV" && block.nodeName !== "P" && block.nodeName[0] !== "H") {
           block = block.parentNode;
         }
-
+        
         // If current block is a heading
         if (block && block.nodeName[0] === "H") {
           e.preventDefault(); // prevent default enter
@@ -200,21 +200,109 @@ document.body.appendChild(imageInput);
 
 // Insert Image Button
 document.getElementById("imageBtn").addEventListener("click", () => {
-  imageInput.click(); // open file dialog
+  imageInput.click();
 });
 
-// When file is chosen
 imageInput.addEventListener("change", () => {
   const file = imageInput.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const imgHTML = `<img src="${e.target.result}" style="max-width:200px;">`;
-      editor.execCommand("insertHTML", imgHTML);
-    };
-    reader.readAsDataURL(file);
-  }
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    // Create wrapper
+    const span = document.createElement("span");
+    span.className = "resizable-img";
+    span.contentEditable = "false";
+    span.style.display = "inline-block";
+    span.style.position = "relative";
+    span.style.border = "1px dashed #aaa";
+    span.style.padding = "2px";
+    span.style.margin = "2px";
+    span.style.cursor = "move"; // show that it’s draggable
+
+    // Create image
+    const img = document.createElement("img");
+    img.src = e.target.result;
+    img.style.display = "block";
+    img.style.maxWidth = "100%";
+    img.style.height = "auto";
+
+    // Create resize handle
+    const handle = document.createElement("span");
+    handle.className = "resizable-handle";
+    handle.style.position = "absolute";
+    handle.style.width = "10px";
+    handle.style.height = "10px";
+    handle.style.background = "#0078d7";
+    handle.style.border = "1px solid #fff";
+    handle.style.right = "0";
+    handle.style.bottom = "0";
+    handle.style.cursor = "se-resize";
+
+    span.appendChild(img);
+    span.appendChild(handle);
+    editor.editor.appendChild(span);
+
+    // ------------------ RESIZE ------------------
+    let startX, startY, startWidth, startHeight;
+    handle.addEventListener("mousedown", (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      startX = ev.clientX;
+      startY = ev.clientY;
+      startWidth = img.offsetWidth;
+      startHeight = img.offsetHeight;
+
+      function onMouseMove(eMove) {
+        const newWidth = startWidth + (eMove.clientX - startX);
+        const newHeight = startHeight + (eMove.clientY - startY);
+        img.style.width = newWidth + "px";
+        img.style.height = newHeight + "px";
+      }
+
+      function onMouseUp() {
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+      }
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    });
+
+    // ------------------ DRAG ------------------
+    let dragStartX, dragStartY, spanStartLeft, spanStartTop, isDragging = false;
+    span.addEventListener("mousedown", (ev) => {
+      if (ev.target === handle) return; // skip if resizing
+      ev.preventDefault();
+      isDragging = true;
+      dragStartX = ev.clientX;
+      dragStartY = ev.clientY;
+
+      const rect = span.getBoundingClientRect();
+      spanStartLeft = rect.left + window.scrollX;
+      spanStartTop = rect.top + window.scrollY;
+
+      span.style.position = "absolute";
+      span.style.zIndex = "1000";
+    });
+
+    document.addEventListener("mousemove", (evMove) => {
+      if (!isDragging) return;
+      const dx = evMove.clientX - dragStartX;
+      const dy = evMove.clientY - dragStartY;
+      span.style.left = spanStartLeft + dx + "px";
+      span.style.top = spanStartTop + dy + "px";
+    });
+
+    document.addEventListener("mouseup", () => {
+      isDragging = false;
+    });
+  };
+
+  reader.readAsDataURL(file);
 });
+
+//Insert table//
 document.getElementById("tableBtn").addEventListener("click", () => {
   const rows = parseInt(prompt("Number of rows?", 2));
   const cols = parseInt(prompt("Number of columns?", 2));
@@ -556,6 +644,7 @@ document.getElementById("undoBtn").addEventListener("click", () => {
 document.getElementById("redoBtn").addEventListener("click", () => {
   document.execCommand("redo");
 });
+
 
 
 

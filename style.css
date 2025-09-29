@@ -1,6 +1,6 @@
 body {
   font-family: Arial, sans-serif;
-  margin: 20px;
+  background: #eee;
 }
 
 #ribbon {
@@ -49,6 +49,7 @@ body {
   outline: none;
   overflow-y: auto;
 }
+
 
 .tabBtn {
   padding: 8px 12px;
@@ -138,3 +139,26 @@ body.dark-mode #autoSaveStatus {
   padding: 6px 10px;
   cursor: pointer;
 }
+.resizable-img {
+  display: inline-block;
+  position: relative;
+}
+
+.resizable-img img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.resizable-handle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #0078d7;
+  border: 1px solid #fff;
+  right: 0;
+  bottom: 0;
+  cursor: se-resize;
+}
+
+
