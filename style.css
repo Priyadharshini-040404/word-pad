@@ -43,38 +43,58 @@ body {
 
 #editor {
   width: 100%;
-  height: 400px;
+  height: 500px;
   border: 1px solid #ccc;
   padding: 10px;
   outline: none;
-  overflow-y: auto;
+  overflow: auto;
 }
 
 
 .tabBtn {
   padding: 8px 12px;
   border: 1px solid #ccc;
-  background: #eee;
+  background: #ccc;
   cursor: pointer;
 }
 
 .tabBtn.active {
-  background: #fff;
+  background: #ccc;
   border-bottom: 2px solid #0078d7; 
   font-weight: bold;
 }
-#editor table {
-  width: 100%;
-  table-layout: fixed;  /* Columns share width evenly */
+#editor table.inline-table {
   border-collapse: collapse;
+  border: 2px solid black;
+  background: #ccc;
+  table-layout: auto !important;
+  width: auto !important;
+  max-width: 100%;
+  display: inline-table;
 }
 
-#editor td {
-  padding: 10px;
-  border: 1px solid #ccc;
-  min-width: 50px;
-  word-wrap: break-word;
+#editor table.inline-table td {
+  border: 1px solid black;
+  padding: 6px;
+  min-width: 40px;
+  white-space: nowrap;
 }
+
+/* Wrapper makes table draggable */
+.table-wrapper {
+  display: inline-block;
+  position: absolute;   /* ✅ always absolute */
+  margin: 5px;
+  cursor: move;
+  z-index: 10;
+}
+
+
+.table-wrapper.active {
+  position: absolute;
+  z-index: 1000;
+}
+
 
 .dropdown {
   display: inline-block;
@@ -141,6 +161,8 @@ body.dark-mode #autoSaveStatus {
 .resizable-img {
   display: inline-block;
   position: relative;
+   display: block;
+  max-width: 100%;
 }
 
 .resizable-img img {
@@ -158,5 +180,85 @@ body.dark-mode #autoSaveStatus {
   right: 0;
   bottom: 0;
   cursor: se-resize;
+}
+
+.page-block {
+  break-inside: avoid;
+  page-break-inside: avoid; /* for compatibility */
+  display: block;
+}
+table tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+img {
+  page-break-inside: avoid;
+  break-inside: avoid;
+  max-width: 100%;
+}
+.pdf-container {
+  width: 794px; /* approx A4 width in px at 96dpi */
+  padding: 40px;
+  box-sizing: border-box;
+}
+.draggable-wrapper {
+  cursor: pointer; /* shows move pointer when active */
+}
+/* Default layout: relative for normal flow */
+.resizable-img, .table-wrapper {
+  position: relative;  /* instead of absolute */
+  display: block;
+  max-width: 100%;
+  margin: 5px 0;       /* space around */
+}
+
+/* Active drag state */
+.resizable-img.active, .table-wrapper.active {
+  position: absolute;
+  z-index: 1000;
+  cursor: move;
+}
+
+/* Prevent breaking inside pages */
+.page-block, table, img {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  display: block;
+}
+/* Inline table */
+table.inline-table {
+  border-collapse: collapse;
+  border: 2px solid black;
+  background: #ccc;
+  table-layout: auto;
+  width: fit-content;
+  max-width: 100%;
+}
+
+/* Table cells */
+table.inline-table td {
+  border: 1px solid black;
+  padding: 6px;
+  min-width: 50px;
+  white-space: nowrap;
+}
+
+/* Context menu */
+#table-context-menu {
+  position: absolute;
+  background: #ccc;
+  border: 1px solid #ccc;
+  padding: 5px;
+  z-index: 2000;
+  font-family: Arial, sans-serif;
+}
+
+#table-context-menu div {
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+#table-context-menu div:hover {
+  background: #ccc;
 }
 

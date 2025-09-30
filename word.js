@@ -186,24 +186,50 @@ document.querySelectorAll(".tabBtn").forEach((btn) => {
 });
 // Insert Link
 document.getElementById("linkBtn").addEventListener("click", () => {
-  const url = prompt("Enter the URL:");
-  if (url) {
+  showInputModal("Enter the URL:", "", (url) => {
+    if (!url) {
+      showToast("Link insertion cancelled");
+      return;
+    }
     editor.execCommand("createLink", url);
-  }
+    showToast("Link inserted successfully");
+  });
 });
-// Create hidden file input for image
+
+// ==================== IMAGE INSERT WITH CONTEXT MENU ====================
 const imageInput = document.createElement("input");
 imageInput.type = "file";
 imageInput.accept = "image/*";
 imageInput.style.display = "none";
 document.body.appendChild(imageInput);
 
-// Insert Image Button
 document.getElementById("imageBtn").addEventListener("click", () => {
-  imageInput.value = ""; // reset so same file can be reselected
+  imageInput.value = "";
   imageInput.click();
 });
 
+// Create custom context menu
+const menu = document.createElement("div");
+menu.id = "imgContextMenu";
+menu.style.position = "absolute";
+menu.style.display = "none";
+menu.style.background = "#fff";
+menu.style.border = "1px solid #ccc";
+menu.style.padding = "5px";
+menu.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
+menu.style.zIndex = "2000";
+menu.innerHTML = `
+  <div class="menu-item" data-action="drag">Drag</div>
+  <div class="menu-item" data-action="resize">Resize</div>
+  <div class="menu-item" data-action="crop">Crop</div>
+  <div class="menu-item" data-action="delete">Delete</div>
+`;
+document.body.appendChild(menu);
+
+// Hide menu when clicking elsewhere
+document.addEventListener("click", () => (menu.style.display = "none"));
+
+// Image insert logic
 imageInput.addEventListener("change", () => {
   const file = imageInput.files[0];
   if (!file) return;
@@ -211,217 +237,217 @@ imageInput.addEventListener("change", () => {
   const reader = new FileReader();
   reader.onload = (e) => {
     const span = document.createElement("span");
-    span.className = "resizable-img";
+    span.className = "img-wrapper";
+    span.id = "img-" + Date.now();
     span.contentEditable = "false";
     span.style.display = "inline-block";
     span.style.position = "relative";
-    span.style.border = "1px dashed #aaa";
-    span.style.padding = "2px";
-    span.style.margin = "2px";
-    span.style.cursor = "move";
+    span.style.margin = "5px";
 
     const img = document.createElement("img");
     img.src = e.target.result;
-    img.style.display = "block";
-    img.style.width = "200px"; // default smaller size
+    img.style.width = "200px";
     img.style.height = "auto";
-
-    // Resize handle
-    const handle = document.createElement("span");
-    handle.className = "resizable-handle";
-    handle.style.position = "absolute";
-    handle.style.width = "10px";
-    handle.style.height = "10px";
-    handle.style.background = "#0078d7";
-    handle.style.border = "1px solid #fff";
-    handle.style.right = "0";
-    handle.style.bottom = "0";
-    handle.style.cursor = "se-resize";
-
-    // Delete button
-    const delBtn = document.createElement("span");
-    delBtn.textContent = "×";
-    delBtn.style.position = "absolute";
-    delBtn.style.top = "-8px";
-    delBtn.style.right = "-8px";
-    delBtn.style.width = "16px";
-    delBtn.style.height = "16px";
-    delBtn.style.background = "red";
-    delBtn.style.color = "white";
-    delBtn.style.fontWeight = "bold";
-    delBtn.style.textAlign = "center";
-    delBtn.style.lineHeight = "16px";
-    delBtn.style.borderRadius = "50%";
-    delBtn.style.cursor = "pointer";
-    delBtn.addEventListener("click", () => span.remove());
+    img.style.display = "block";
 
     span.appendChild(img);
-    span.appendChild(handle);
-    span.appendChild(delBtn);
     editor.editor.appendChild(span);
 
-    const editorRect = editor.editor.getBoundingClientRect();
-
-    // --- RESIZE ---
-    handle.addEventListener("mousedown", (ev) => {
-      ev.stopPropagation();
+    // Right-click to show context menu
+    span.addEventListener("contextmenu", (ev) => {
       ev.preventDefault();
-      let startX = ev.clientX;
-      let startY = ev.clientY;
-      let startWidth = img.offsetWidth;
-      let startHeight = img.offsetHeight;
-
-      function onMouseMove(e) {
-        const newWidth = startWidth + (e.clientX - startX);
-        const newHeight = startHeight + (e.clientY - startY);
-        img.style.width = newWidth + "px";
-        img.style.height = newHeight + "px";
-      }
-
-      function onMouseUp() {
-        document.removeEventListener("mousemove", onMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
-      }
-
-      document.addEventListener("mousemove", onMouseMove);
-      document.addEventListener("mouseup", onMouseUp);
-    });
-
-    // --- DRAG ---
-    let isDragging = false;
-    let dragEnabled = true; // for disabling drag during cropping
-    span.addEventListener("mousedown", (ev) => {
-      if (!dragEnabled) return;
-      if (ev.target === handle || ev.target === delBtn) return;
-      ev.preventDefault();
-      isDragging = true;
-
-      const startX = ev.clientX;
-      const startY = ev.clientY;
-      const rect = span.getBoundingClientRect();
-      let offsetLeft = rect.left + window.scrollX;
-      let offsetTop = rect.top + window.scrollY;
-
-      function onMouseMove(e) {
-        if (!isDragging) return;
-
-        let newLeft = offsetLeft + e.clientX - startX;
-        let newTop = offsetTop + e.clientY - startY;
-
-        // Restrict drag within editor
-        const spanRect = span.getBoundingClientRect();
-        const editorRect = editor.editor.getBoundingClientRect();
-
-        newLeft = Math.max(editorRect.left + window.scrollX, Math.min(newLeft, editorRect.right + window.scrollX - spanRect.width));
-        newTop = Math.max(editorRect.top + window.scrollY, Math.min(newTop, editorRect.bottom + window.scrollY - spanRect.height));
-
-        span.style.position = "absolute";
-        span.style.left = newLeft + "px";
-        span.style.top = newTop + "px";
-        span.style.zIndex = "1000";
-      }
-
-      function onMouseUp() {
-        isDragging = false;
-        document.removeEventListener("mousemove", onMouseMove);
-        document.removeEventListener("mouseup", onMouseUp);
-      }
-
-      document.addEventListener("mousemove", onMouseMove);
-      document.addEventListener("mouseup", onMouseUp);
-    });
-
-    // --- DOUBLE CLICK CROP ---
-    img.addEventListener("dblclick", () => {
-      dragEnabled = false;
-
-      let cropStartX, cropStartY, cropRect;
-      const imgRect = img.getBoundingClientRect();
-
-      function onMouseDown(ev) {
-        ev.preventDefault();
-        cropStartX = ev.clientX - imgRect.left;
-        cropStartY = ev.clientY - imgRect.top;
-
-        cropRect = document.createElement("div");
-        cropRect.style.position = "absolute";
-        cropRect.style.border = "2px dashed red";
-        cropRect.style.background = "rgba(255,255,255,0.3)";
-        cropRect.style.left = cropStartX + "px";
-        cropRect.style.top = cropStartY + "px";
-        cropRect.style.width = "0px";
-        cropRect.style.height = "0px";
-        span.appendChild(cropRect);
-
-        span.addEventListener("mousemove", onMouseMove);
-        span.addEventListener("mouseup", onMouseUp);
-      }
-
-      function onMouseMove(ev) {
-        const x = ev.clientX - imgRect.left;
-        const y = ev.clientY - imgRect.top;
-        cropRect.style.left = Math.min(cropStartX, x) + "px";
-        cropRect.style.top = Math.min(cropStartY, y) + "px";
-        cropRect.style.width = Math.abs(x - cropStartX) + "px";
-        cropRect.style.height = Math.abs(y - cropStartY) + "px";
-      }
-
-      function onMouseUp() {
-        span.removeEventListener("mousemove", onMouseMove);
-        span.removeEventListener("mouseup", onMouseUp);
-
-        const sx = parseInt(parseInt(cropRect.style.left) / img.offsetWidth * img.naturalWidth);
-        const sy = parseInt(parseInt(cropRect.style.top) / img.offsetHeight * img.naturalHeight);
-        const sw = parseInt(parseInt(cropRect.style.width) / img.offsetWidth * img.naturalWidth);
-        const sh = parseInt(parseInt(cropRect.style.height) / img.offsetHeight * img.naturalHeight);
-
-        const canvas = document.createElement("canvas");
-        canvas.width = sw;
-        canvas.height = sh;
-        const ctx = canvas.getContext("2d");
-
-        const tempImg = new Image();
-        tempImg.onload = () => {
-          ctx.drawImage(tempImg, sx, sy, sw, sh, 0, 0, sw, sh);
-          img.src = canvas.toDataURL();
-          img.style.width = "200px";
-          img.style.height = "auto";
-          cropRect.remove();
-          dragEnabled = true;
-        };
-        tempImg.src = img.src;
-      }
-
-      img.addEventListener("mousedown", onMouseDown, { once: true });
+      menu.style.left = ev.pageX + "px";
+      menu.style.top = ev.pageY + "px";
+      menu.style.display = "block";
+      menu.dataset.targetId = span.id;
     });
   };
 
   reader.readAsDataURL(file);
 });
 
-// Insert Table Button
+// ==================== FUNCTIONS ====================
+
+// Drag mode
+function enableDrag(wrapper) {
+  const img = wrapper.querySelector("img");
+  wrapper.style.cursor = "move";
+
+  function onMouseDown(ev) {
+    ev.preventDefault();
+    let startX = ev.clientX;
+    let startY = ev.clientY;
+    const rect = wrapper.getBoundingClientRect();
+    let offsetLeft = rect.left + window.scrollX;
+    let offsetTop = rect.top + window.scrollY;
+
+    function onMouseMove(e) {
+      wrapper.style.position = "absolute";
+      wrapper.style.left = offsetLeft + (e.clientX - startX) + "px";
+      wrapper.style.top = offsetTop + (e.clientY - startY) + "px";
+      wrapper.style.zIndex = "1000";
+    }
+    function onMouseUp() {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      wrapper.style.cursor = "default";
+    }
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }
+
+  wrapper.addEventListener("mousedown", onMouseDown, { once: true });
+}
+
+// Resize mode
+function enableResize(img) {
+  const handle = document.createElement("span");
+  handle.className = "resize-handle";
+  handle.style.position = "absolute";
+  handle.style.width = "10px";
+  handle.style.height = "10px";
+  handle.style.background = "#0078d7";
+  handle.style.right = "0";
+  handle.style.bottom = "0";
+  handle.style.cursor = "se-resize";
+  img.parentNode.appendChild(handle);
+
+  handle.addEventListener("mousedown", (ev) => {
+    ev.stopPropagation();
+    ev.preventDefault();
+    let startX = ev.clientX;
+    let startY = ev.clientY;
+    let startWidth = img.offsetWidth;
+    let startHeight = img.offsetHeight;
+
+    function onMouseMove(e) {
+      img.style.width = startWidth + (e.clientX - startX) + "px";
+      img.style.height = startHeight + (e.clientY - startY) + "px";
+    }
+    function onMouseUp() {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      handle.remove(); // remove handle after resize
+    }
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  });
+}
+
+// Crop mode
+function enableCrop(img) {
+  const wrapper = img.parentNode;
+  wrapper.style.position = "relative";
+
+  const cropBox = document.createElement("div");
+  cropBox.style.position = "absolute";
+  cropBox.style.border = "2px dashed red";
+  cropBox.style.background = "rgba(255,0,0,0.1)";
+  cropBox.style.left = "20px";
+  cropBox.style.top = "20px";
+  cropBox.style.width = "100px";
+  cropBox.style.height = "100px";
+  wrapper.appendChild(cropBox);
+
+  // Drag to resize crop box
+  let isResizing = false;
+  cropBox.addEventListener("mousedown", (ev) => {
+    ev.preventDefault();
+    let startX = ev.clientX;
+    let startY = ev.clientY;
+    let startW = cropBox.offsetWidth;
+    let startH = cropBox.offsetHeight;
+
+    function onMouseMove(e) {
+      cropBox.style.width = startW + (e.clientX - startX) + "px";
+      cropBox.style.height = startH + (e.clientY - startY) + "px";
+    }
+    function onMouseUp() {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      // Apply crop
+      applyCrop(img, cropBox);
+    }
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  });
+}
+
+// Apply crop using canvas
+function applyCrop(img, cropBox) {
+  const rect = cropBox.getBoundingClientRect();
+  const imgRect = img.getBoundingClientRect();
+
+  const sx = rect.left - imgRect.left;
+  const sy = rect.top - imgRect.top;
+  const sw = rect.width;
+  const sh = rect.height;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = sw;
+  canvas.height = sh;
+  const ctx = canvas.getContext("2d");
+
+  const tmpImg = new Image();
+  tmpImg.src = img.src;
+  tmpImg.onload = () => {
+    ctx.drawImage(tmpImg, sx, sy, sw, sh, 0, 0, sw, sh);
+    img.src = canvas.toDataURL("image/png");
+    cropBox.remove();
+  };
+}
+
+// ==================== CONTEXT MENU HANDLER ====================
+menu.addEventListener("click", (e) => {
+  const action = e.target.dataset.action;
+  const target = document.getElementById(menu.dataset.targetId);
+  if (!target) return;
+  const img = target.querySelector("img");
+
+  if (action === "delete") {
+    target.remove();
+  } else if (action === "drag") {
+    enableDrag(target);
+  } else if (action === "resize") {
+    enableResize(img);
+  } else if (action === "crop") {
+    enableCrop(img);
+  }
+  menu.style.display = "none";
+});
+
+
+// ==================== SIMPLE TABLE INSERT (NO WRAPPER) ====================
 document.getElementById("tableBtn").addEventListener("click", () => {
-  const rows = parseInt(prompt("Number of rows?", 2));
-  const cols = parseInt(prompt("Number of columns?", 2));
-  if (rows <= 0 || cols <= 0) return;
+  showInputModal("Enter number of rows:", "2", (rowValue) => {
+    if (rowValue === null) return; // cancelled
+    const rows = parseInt(rowValue);
+    if (rows <= 0) {
+      showToast("Rows must be greater than 0");
+      return;
+    }
 
-  // --- Wrapper container ---
-  const wrapper = document.createElement("div");
-  wrapper.className = "table-wrapper";
-  wrapper.style.position = "absolute";
-  wrapper.style.display = "inline-block";
-  wrapper.style.border = "2px solid black";
-  wrapper.style.minWidth = "150px";
-  wrapper.style.minHeight = "50px";
-  wrapper.style.background = "#fff";
-  wrapper.style.boxSizing = "border-box";
+    showInputModal("Enter number of columns:", "2", (colValue) => {
+      if (colValue === null) return; // cancelled
+      const cols = parseInt(colValue);
+      if (cols <= 0) {
+        showToast("Columns must be greater than 0");
+        return;
+      }
 
-  // --- Table inside wrapper ---
+  // --- Create table ---
   const table = document.createElement("table");
   table.style.borderCollapse = "collapse";
-  table.style.width = "100%";
-  table.style.height = "100%";
-  table.style.tableLayout = "fixed"; // important for shrinking
+  table.style.width = "300px";  // fixed width
+  table.style.minWidth = "150px";
+  table.style.height = "150px"; // fixed height
+  table.style.tableLayout = "fixed";
+  table.style.position = "absolute"; // for dragging
+  table.style.top = "50px";
+  table.style.left = "50px";
+  table.style.cursor = "move";
+  table.style.background = "#fff";
+  table.style.zIndex = "1000";
 
   for (let r = 0; r < rows; r++) {
     const tr = document.createElement("tr");
@@ -429,7 +455,6 @@ document.getElementById("tableBtn").addEventListener("click", () => {
       const td = document.createElement("td");
       td.style.border = "1px solid black";
       td.style.padding = "5px";
-      td.style.overflow = "hidden"; // prevent content overflow
       td.style.wordBreak = "break-word";
       td.innerHTML = "&nbsp;";
       tr.appendChild(td);
@@ -437,98 +462,37 @@ document.getElementById("tableBtn").addEventListener("click", () => {
     table.appendChild(tr);
   }
 
-  wrapper.appendChild(table);
-
-  // --- Delete button ---
-  const delBtn = document.createElement("span");
-  delBtn.textContent = "×";
-  delBtn.style.position = "absolute";
-  delBtn.style.top = "-10px";
-  delBtn.style.right = "-10px";
-  delBtn.style.width = "20px";
-  delBtn.style.height = "20px";
-  delBtn.style.background = "red";
-  delBtn.style.color = "white";
-  delBtn.style.textAlign = "center";
-  delBtn.style.lineHeight = "18px";
-  delBtn.style.fontWeight = "bold";
-  delBtn.style.borderRadius = "50%";
-  delBtn.style.cursor = "pointer";
-  delBtn.addEventListener("click", () => wrapper.remove());
-  wrapper.appendChild(delBtn);
-
-  // --- Resize handle ---
-  const resizeHandle = document.createElement("div");
-  resizeHandle.style.position = "absolute";
-  resizeHandle.style.width = "12px";
-  resizeHandle.style.height = "12px";
-  resizeHandle.style.right = "-6px";
-  resizeHandle.style.bottom = "-6px";
-  resizeHandle.style.border = "2px dotted black";
-  resizeHandle.style.background = "white";
-  resizeHandle.style.cursor = "se-resize";
-  wrapper.appendChild(resizeHandle);
-
-  const editorRect = editor.editor.getBoundingClientRect();
-
-  // --- Drag wrapper ---
+  // --- Drag functionality ---
   let isDragging = false, startX, startY, startLeft, startTop;
-  wrapper.addEventListener("mousedown", (ev) => {
-    if (ev.target === resizeHandle || ev.target === delBtn) return;
+  table.addEventListener("mousedown", (ev) => {
     ev.preventDefault();
     isDragging = true;
     startX = ev.clientX;
     startY = ev.clientY;
-    const rect = wrapper.getBoundingClientRect();
+    const rect = table.getBoundingClientRect();
     startLeft = rect.left + window.scrollX;
     startTop = rect.top + window.scrollY;
   });
 
   document.addEventListener("mousemove", (ev) => {
     if (!isDragging) return;
+    const editorRect = editor.editor.getBoundingClientRect();
     let newLeft = startLeft + ev.clientX - startX;
     let newTop = startTop + ev.clientY - startY;
 
-    const wrapRect = wrapper.getBoundingClientRect();
-    newLeft = Math.max(editorRect.left + window.scrollX, Math.min(newLeft, editorRect.right + window.scrollX - wrapRect.width));
-    newTop = Math.max(editorRect.top + window.scrollY, Math.min(newTop, editorRect.bottom + window.scrollY - wrapRect.height));
+    // Keep table inside editor
+    const tableRect = table.getBoundingClientRect();
+    newLeft = Math.max(editorRect.left + window.scrollX, Math.min(newLeft, editorRect.right + window.scrollX - tableRect.width));
+    newTop = Math.max(editorRect.top + window.scrollY, Math.min(newTop, editorRect.bottom + window.scrollY - tableRect.height));
 
-    wrapper.style.left = newLeft + "px";
-    wrapper.style.top = newTop + "px";
-    wrapper.style.zIndex = "1000";
+    table.style.left = newLeft + "px";
+    table.style.top = newTop + "px";
   });
 
   document.addEventListener("mouseup", () => isDragging = false);
 
-  // --- Resize wrapper ---
-  let isResizing = false, resizeStartX, resizeStartY, startWidth, startHeight;
-  resizeHandle.addEventListener("mousedown", (ev) => {
-    ev.stopPropagation();
-    ev.preventDefault();
-    isResizing = true;
-    resizeStartX = ev.clientX;
-    resizeStartY = ev.clientY;
-    startWidth = wrapper.offsetWidth;
-    startHeight = wrapper.offsetHeight;
-  });
-
-  document.addEventListener("mousemove", (ev) => {
-    if (!isResizing) return;
-    const newWidth = startWidth + (ev.clientX - resizeStartX);
-    const newHeight = startHeight + (ev.clientY - resizeStartY);
-
-    wrapper.style.width = Math.max(newWidth, 100) + "px";
-    wrapper.style.height = Math.max(newHeight, 50) + "px";
-
-    // Force table to always fill wrapper
-    table.style.width = "100%";
-    table.style.height = "100%";
-  });
-
-  document.addEventListener("mouseup", () => isResizing = false);
-
-  // --- Context menu (add/remove row/col, delete) ---
-  wrapper.addEventListener("contextmenu", (ev) => {
+  // --- Context menu (add/remove row/col, delete table) ---
+  table.addEventListener("contextmenu", (ev) => {
     ev.preventDefault();
     const oldMenu = document.getElementById("table-context-menu");
     if (oldMenu) oldMenu.remove();
@@ -538,7 +502,7 @@ document.getElementById("tableBtn").addEventListener("click", () => {
     menu.style.position = "absolute";
     menu.style.left = ev.pageX + "px";
     menu.style.top = ev.pageY + "px";
-    menu.style.background = "#fff";
+    menu.style.background = "#ccc";
     menu.style.border = "1px solid #ccc";
     menu.style.padding = "5px";
     menu.style.zIndex = "2000";
@@ -598,7 +562,7 @@ document.getElementById("tableBtn").addEventListener("click", () => {
     deleteTable.textContent = "Delete Table";
     deleteTable.style.cursor = "pointer";
     deleteTable.onclick = () => {
-      wrapper.remove();
+      table.remove();
       menu.remove();
     };
 
@@ -617,9 +581,10 @@ document.getElementById("tableBtn").addEventListener("click", () => {
     }, { once: true });
   });
 
-  editor.editor.appendChild(wrapper);
+  editor.editor.appendChild(table);
 });
-
+  });
+});
 
 // Clear formatting (remove inline styles, keep headings/bold/italic/underline)
 document.getElementById("clearFormatBtn").addEventListener("click", () => {
@@ -656,15 +621,15 @@ document.getElementById("resetBtn").addEventListener("click", () => {
 // Copy plain text
 document.getElementById("copyTextBtn").addEventListener("click", () => {
   navigator.clipboard.writeText(editor.getText())
-    .then(() => alert("Text copied to clipboard"))
-    .catch(err => alert("Failed to copy text"));
+    .then(() => showToast("Text copied to clipboard"))
+    .catch(err => showToast("Failed to copy text"));
 });
 
 // Copy HTML
 document.getElementById("copyHtmlBtn").addEventListener("click", () => {
   navigator.clipboard.writeText(editor.getHTML())
-    .then(() => alert("HTML copied to clipboard"))
-    .catch(err => alert("Failed to copy HTML"));
+    .then(() => showToast("HTML copied to clipboard"))
+    .catch(err => showToast("Failed to copy HTML"));
 });
 // Preview
 document.getElementById("previewBtn").addEventListener("click", () => {
@@ -698,74 +663,118 @@ document.getElementById("saveDocBtn").addEventListener("click", () => {
   const defaultTitle = document.getElementById("docTitle").value || "Untitled";
   const author = document.getElementById("docAuthor").value || "Unknown";
 
-  // Ask user for file name
-  const fileName = prompt("Enter file name for DOC:", defaultTitle);
-  if (!fileName) return; // Cancel if user presses Cancel
+  showInputModal("Enter file name for DOC:", defaultTitle, (fileName) => {
+    if (!fileName) {
+      showToast("DOC save cancelled");
+      return;
+    }
 
-  const wordHeader = `
-  <html xmlns:o='urn:schemas-microsoft-com:office:office'
-        xmlns:w='urn:schemas-microsoft-com:office:word'
-        xmlns='http://www.w3.org/TR/REC-html40'>
-  <head>
-    <meta charset="UTF-8">
-    <title>${fileName}</title>
-    <!-- Word-specific metadata -->
-    <xml>
-      <w:WordDocument>
-        <w:Author>${author}</w:Author>
-        <w:Title>${fileName}</w:Title>
-      </w:WordDocument>
-    </xml>
-  </head>
-  <body>
-    ${content}
-  </body>
-  </html>`;
+    // Add inline styles to tables and images
+    const tempContent = content.replace(/<table/g, '<table style="width:100%; border-collapse: collapse;"')
+                               .replace(/<img/g, '<img style="display:block; max-width:100%; height:auto; margin:0 auto;"');
 
-  const blob = new Blob([wordHeader], { type: "application/msword" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = fileName + ".doc";
-  link.click();
-  URL.revokeObjectURL(link.href);
+    const wordHeader = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office'
+            xmlns:w='urn:schemas-microsoft-com:office:word'
+            xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <meta charset="UTF-8">
+        <title>${fileName}</title>
+        <xml>
+          <w:WordDocument>
+            <w:Author>${author}</w:Author>
+            <w:Title>${fileName}</w:Title>
+          </w:WordDocument>
+        </xml>
+      </head>
+      <body>
+        ${tempContent}
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([wordHeader], { type: "application/msword" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName + ".doc";
+    link.click();
+    URL.revokeObjectURL(link.href);
+
+    showToast("DOC file saved successfully");
+  });
 });
-
-// Save as PDF
+//save as pdf
 document.getElementById("savePdfBtn").addEventListener("click", () => {
-  const element = document.getElementById("editor");
+  const editorEl = document.getElementById("editor");
   const defaultTitle = document.getElementById("docTitle").value || "Untitled";
   const author = document.getElementById("docAuthor").value || "Unknown";
 
-  // Ask user for file name
-  const fileName = prompt("Enter file name for PDF:", defaultTitle);
-  if (!fileName) return; // Cancel if user presses Cancel
+  showInputModal("Enter file name for PDF:", defaultTitle, (fileName) => {
+    if (!fileName) {
+      showToast("Operation cancelled");
+      return;
+    }
 
-  const opt = {
-    margin: 0.5,
-    filename: fileName + ".pdf",
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
-  };
+    const pdfContainer = document.createElement("div");
+    pdfContainer.style.width = "794px"; // A4 approx 8.27in * 96dpi
+    pdfContainer.style.minHeight = "1123px"; // A4 approx 11.69in * 96dpi
+    pdfContainer.style.padding = "40px";
+    pdfContainer.style.boxSizing = "border-box";
+    pdfContainer.style.background = "#fff";
+    pdfContainer.innerHTML = editorEl.innerHTML;
 
-  html2pdf()
-    .set(opt)
-    .from(element)
-    .toPdf()
-    .get('pdf')
-    .then((pdf) => {
-      pdf.setProperties({
-        title: fileName,
-        author: author,
-        subject: "Mini WordPad Export",
-        keywords: "WordPad, Editor, Export, PDF",
-        creator: "Mini WordPad"
-      });
-    })
-    .save();
+    // Fix images
+    const images = pdfContainer.querySelectorAll("img");
+    images.forEach(img => {
+      img.style.display = "block";
+      img.style.maxWidth = "100%";
+      img.style.height = "auto";
+      img.style.margin = "0 auto";
+    });
+
+    // Fix tables
+    const tables = pdfContainer.querySelectorAll("table");
+    tables.forEach(table => {
+      table.style.width = "100%";
+      table.style.borderCollapse = "collapse";
+    });
+
+    // Add page-break rule
+    const style = document.createElement("style");
+    style.innerHTML = `
+      table, img {
+        page-break-inside: avoid !important;
+      }
+      table th, table td {
+        border: 1px solid #000;
+        padding: 4px;
+      }
+    `;
+    pdfContainer.appendChild(style);
+
+    html2pdf()
+      .set({
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: fileName + ".pdf",
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
+      })
+      .from(pdfContainer)
+      .toPdf()
+      .get('pdf')
+      .then((pdf) => {
+        pdf.setProperties({
+          title: fileName,
+          author: author
+        });
+      })
+      .save();
+  });
 });
 
-let matches = [];      
-let currentMatch = -1; 
+let matches = [];
+let currentMatch = -1;
 let currentRange = null;
 
 // Clear current highlight
@@ -775,14 +784,14 @@ function clearHighlight() {
   currentRange = null;
 }
 
-// Build matches for current search term (partial matches allowed)
+// Build matches for current search term
 function buildMatches(searchText) {
   matches = [];
   currentMatch = -1;
   if (!searchText) return;
 
   const walker = document.createTreeWalker(editor.editor, NodeFilter.SHOW_TEXT);
-  const regex = new RegExp(searchText, "gi"); // remove \b for partial matches
+  const regex = new RegExp(searchText, "gi"); // partial matches
   let node;
   while (node = walker.nextNode()) {
     let match;
@@ -797,7 +806,7 @@ function buildMatches(searchText) {
 
 // Highlight the next match
 function highlightNext() {
-  if (matches.length === 0) return alert("No matches found");
+  if (matches.length === 0) return showToast("No matches found");
   clearHighlight();
   currentMatch = (currentMatch + 1) % matches.length;
   const sel = window.getSelection();
@@ -812,7 +821,7 @@ document.getElementById("findBtn").addEventListener("click", () => {
   const searchText = document.getElementById("findInput").value;
   if (!searchText) return;
 
-  // If new search term, rebuild matches
+  // If new search term or empty matches, rebuild matches
   if (!matches.length || searchText.toLowerCase() !== document.getElementById("findInput").dataset.lastSearch) {
     buildMatches(searchText);
     document.getElementById("findInput").dataset.lastSearch = searchText.toLowerCase();
@@ -822,15 +831,21 @@ document.getElementById("findBtn").addEventListener("click", () => {
 
 // Replace currently highlighted occurrence
 document.getElementById("replaceBtn").addEventListener("click", () => {
-  if (!currentRange) return alert("No text selected to replace");
+  if (!currentRange) return showToast("No text selected to replace");
   const replaceText = document.getElementById("replaceInput").value;
+
+  // Replace the text in the current range
   currentRange.deleteContents();
   currentRange.insertNode(document.createTextNode(replaceText));
-  clearHighlight();
 
-  // After replace, remove this match and adjust currentMatch index
-  matches.splice(currentMatch, 1);
-  currentMatch--; // decrement so next highlightNext() highlights the correct next match
+  // After replacement, rebuild matches so next Find Next works correctly
+  const searchText = document.getElementById("findInput").value;
+  buildMatches(searchText);
+
+  // Move currentMatch to the last replaced index - 1
+  currentMatch = matches.findIndex(r => r.startContainer === currentRange.startContainer) - 1;
+
+  clearHighlight();
 });
 
 // Replace All
@@ -840,7 +855,7 @@ document.getElementById("replaceAllBtn").addEventListener("click", () => {
   if (!searchText) return;
 
   const walker = document.createTreeWalker(editor.editor, NodeFilter.SHOW_TEXT);
-  const regex = new RegExp(searchText, "gi"); // partial matches
+  const regex = new RegExp(searchText, "gi");
   let node;
   while (node = walker.nextNode()) {
     node.textContent = node.textContent.replace(regex, replaceText);
@@ -850,6 +865,9 @@ document.getElementById("replaceAllBtn").addEventListener("click", () => {
   currentMatch = -1;
   clearHighlight();
 });
+
+
+//theme
 const toggleThemeBtn = document.getElementById("toggleThemeBtn");
 
 toggleThemeBtn.addEventListener("click", () => {
@@ -913,43 +931,146 @@ window.addEventListener("load", () => {
 document.getElementById("saveHtmlBtn").addEventListener("click", () => {
   const content = document.getElementById("editor").innerHTML;
   const defaultName = document.getElementById("docTitle").value || "Document";
-  const fileName = prompt("Enter file name for HTML:", defaultName);
-  if (!fileName) return;
 
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <title>${fileName}</title>
-    </head>
-    <body>
-      ${content}
-    </body>
-    </html>
-  `;
+  // Show custom input modal instead of prompt
+  showInputModal("Enter file name for HTML:", defaultName, (fileName) => {
+    if (!fileName) {
+      showToast("HTML save cancelled");
+      return;
+    }
 
-  const blob = new Blob([htmlContent], { type: "text/html" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = fileName + ".html";
-  link.click();
-  URL.revokeObjectURL(link.href);
+    // Prepare HTML content
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>${fileName}</title>
+      </head>
+      <body>
+        ${content}
+      </body>
+      </html>
+    `;
+
+    // Create and trigger download
+    const blob = new Blob([htmlContent], { type: "text/html" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName + ".html";
+    link.click();
+    URL.revokeObjectURL(link.href);
+
+    showToast("HTML file saved successfully");
+  });
 });
 
-// Undo last action
-document.getElementById("undoBtn").addEventListener("click", () => {
-  document.execCommand("undo");
+
+// --- Undo / Redo stacks ---
+const undoStack = [];
+const redoStack = [];
+const editorEl = document.getElementById("editor");
+
+// Save current state to undo stack
+function saveState() {
+  const currentState = editorEl.innerHTML;
+  if (undoStack.length === 0 || undoStack[undoStack.length - 1] !== currentState) {
+    undoStack.push(currentState);
+    if (undoStack.length > 100) undoStack.shift(); // optional limit
+  }
+}
+
+// Place caret at end helper
+function placeCaretAtEnd(el) {
+  el.focus();
+  if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+}
+
+// Undo function
+function undo() {
+  if (undoStack.length > 1) {
+    const lastState = undoStack.pop();
+    redoStack.push(lastState);
+    editorEl.innerHTML = undoStack[undoStack.length - 1];
+    placeCaretAtEnd(editorEl);
+  } else {
+    showToast("Nothing to undo");
+  }
+}
+
+// Redo function
+function redo() {
+  if (redoStack.length) {
+    const state = redoStack.pop();
+    undoStack.push(state);
+    editorEl.innerHTML = state;
+    placeCaretAtEnd(editorEl);
+  } else {
+    showToast("Nothing to redo");
+  }
+}
+
+// Track changes
+editorEl.addEventListener("input", () => {
+  saveState();
+  redoStack.length = 0; // clear redo after new input
 });
 
-// Redo last undone action
-document.getElementById("redoBtn").addEventListener("click", () => {
-  document.execCommand("redo");
-});
+// Bind buttons
+document.getElementById("undoBtn").addEventListener("click", undo);
+document.getElementById("redoBtn").addEventListener("click", redo);
+
+// Initial state
+saveState();
 
 
+function showToast(message, duration = 2500) {
+  const container = document.getElementById("toastContainer");
+  const toast = document.createElement("div");
+  toast.textContent = message;
+  toast.style.background = "#0078d7";
+  toast.style.color = "#fff";
+  toast.style.padding = "8px 12px";
+  toast.style.borderRadius = "4px";
+  toast.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
+  toast.style.opacity = "0";
+  toast.style.transition = "opacity 0.3s";
+  
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.style.opacity = "1");
 
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.addEventListener("transitionend", () => toast.remove());
+  }, duration);
+}
 
+function showInputModal(message, defaultValue = "", callback) {
+  const modal = document.getElementById("inputModal");
+  const input = document.getElementById("modalInput");
+  document.getElementById("modalMessage").textContent = message;
+  input.value = defaultValue;
+  modal.style.display = "flex";
+
+  const cleanUp = () => {
+    modal.style.display = "none";
+    document.getElementById("modalOk").removeEventListener("click", okHandler);
+    document.getElementById("modalCancel").removeEventListener("click", cancelHandler);
+  };
+
+  const okHandler = () => { cleanUp(); callback(input.value); };
+  const cancelHandler = () => { cleanUp(); callback(null); };
+
+  document.getElementById("modalOk").addEventListener("click", okHandler);
+  document.getElementById("modalCancel").addEventListener("click", cancelHandler);
+}
 
 
 
