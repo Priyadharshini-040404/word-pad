@@ -2,36 +2,30 @@ body {
   font-family: Arial, sans-serif;
   background: #eee;
 }
-
 #ribbon {
   background: #f1f1f1;
   padding: 10px;
   border-bottom: 1px solid #ccc;
   margin-bottom: 10px;
 }
-
 .tab-title {
   font-weight: bold;
   margin-right: 15px;
 }
-
 .group {
   display: inline-block;
   margin-right: 15px;
 }
-
 .group button,
 .group select {
   margin: 2px;
   padding: 6px 10px;
   cursor: pointer;
 }
-
 .group label {
   margin-right: 5px;
   font-size: 14px;
 }
-
 .group input[type="color"] {
   width: 40px;
   height: 25px;
@@ -39,8 +33,6 @@ body {
   cursor: pointer;
   margin-right: 10px;
 }
-
-
 #editor {
   width: 100%;
   height: 500px;
@@ -49,15 +41,12 @@ body {
   outline: none;
   overflow: auto;
 }
-
-
 .tabBtn {
   padding: 8px 12px;
   border: 1px solid #ccc;
   background: #ccc;
   cursor: pointer;
 }
-
 .tabBtn.active {
   background: #ccc;
   border-bottom: 2px solid #0078d7; 
@@ -69,38 +58,31 @@ body {
   background: #ccc;
   table-layout: auto !important;
   width: auto !important;
-  max-width: 100%;
+   max-width: 90%;
+  max-height: 400px;
   display: inline-table;
 }
-
 #editor table.inline-table td {
   border: 1px solid black;
   padding: 6px;
   min-width: 40px;
   white-space: nowrap;
 }
-
-/* Wrapper makes table draggable */
 .table-wrapper {
   display: inline-block;
-  position: absolute;   /* ✅ always absolute */
+  position: absolute;   
   margin: 5px;
   cursor: move;
   z-index: 10;
 }
-
-
 .table-wrapper.active {
   position: absolute;
   z-index: 1000;
 }
-
-
 .dropdown {
   display: inline-block;
   position: relative;
 }
-
 .dropdown-content button {
   display: block;
   width: 100%;
@@ -110,7 +92,6 @@ body {
   text-align: left;
   cursor: pointer;
 }
-
 .dropdown-content button:hover {
   background: #eee;
 }
@@ -121,35 +102,28 @@ body.dark-mode {
   background-color: #1e1e1e;
   color: #f1f1f1;
 }
-
 #editor.dark-mode {
   background-color: #2c2c2c;
   color: #f1f1f1;
   border-color: #555;
 }
-
 #ribbon.dark-mode, .tabBtn.dark-mode, .group.dark-mode {
   background-color: #2c2c2c;
   color: #f1f1f1;
   border-color: #555;
 }
-
 .tabBtn.dark-mode.active {
   border-bottom-color: #4caf50;
 }
-/* Toolbar buttons spacing */
 .group button {
   margin-right: 5px;
   padding: 6px 10px;
   cursor: pointer;
 }
-
-/* Auto-save status text */
 #autoSaveStatus {
   font-family: Arial, sans-serif;
   color: #555;
 }
-/* Dark mode support */
 body.dark-mode #autoSaveStatus {
   color: #ccc;
 }
@@ -164,13 +138,11 @@ body.dark-mode #autoSaveStatus {
    display: block;
   max-width: 100%;
 }
-
 .resizable-img img {
   max-width: 100%;
   height: auto;
   display: block;
 }
-
 .resizable-handle {
   position: absolute;
   width: 8px;
@@ -181,10 +153,9 @@ body.dark-mode #autoSaveStatus {
   bottom: 0;
   cursor: se-resize;
 }
-
 .page-block {
   break-inside: avoid;
-  page-break-inside: avoid; /* for compatibility */
+  page-break-inside: avoid; 
   display: block;
 }
 table tr {
@@ -197,53 +168,44 @@ img {
   max-width: 100%;
 }
 .pdf-container {
-  width: 794px; /* approx A4 width in px at 96dpi */
+  width: 794px; 
   padding: 40px;
   box-sizing: border-box;
 }
 .draggable-wrapper {
-  cursor: pointer; /* shows move pointer when active */
+  cursor: pointer; 
 }
-/* Default layout: relative for normal flow */
 .resizable-img, .table-wrapper {
-  position: relative;  /* instead of absolute */
+  position: relative; 
   display: block;
   max-width: 100%;
-  margin: 5px 0;       /* space around */
+  margin: 5px 0;       
 }
-
-/* Active drag state */
 .resizable-img.active, .table-wrapper.active {
   position: absolute;
   z-index: 1000;
   cursor: move;
 }
-
-/* Prevent breaking inside pages */
 .page-block, table, img {
   break-inside: avoid;
   page-break-inside: avoid;
   display: block;
 }
-/* Inline table */
 table.inline-table {
   border-collapse: collapse;
   border: 2px solid black;
   background: #ccc;
   table-layout: auto;
   width: fit-content;
-  max-width: 100%;
+    max-width: 90%;
+  max-height: 400px;
 }
-
-/* Table cells */
 table.inline-table td {
   border: 1px solid black;
   padding: 6px;
-  min-width: 50px;
+  min-width: 150px;
   white-space: nowrap;
 }
-
-/* Context menu */
 #table-context-menu {
   position: absolute;
   background: #ccc;
@@ -252,12 +214,10 @@ table.inline-table td {
   z-index: 2000;
   font-family: Arial, sans-serif;
 }
-
 #table-context-menu div {
   padding: 3px 8px;
   cursor: pointer;
 }
-
 #table-context-menu div:hover {
   background: #ccc;
 }
